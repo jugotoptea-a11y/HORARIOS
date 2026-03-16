@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscador de disponibilidad</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body{
+  font-family:'Segoe UI',Arial,sans-serif;
+  background:#eef2f7;
+  display:flex;
+  justify-content:center;
+  padding:30px 10px;
+}
+
+.container{
+  background:white;
+  padding:30px;
+  border-radius:12px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.1);
+  width:100%;
+  max-width:1200px;
+}
+
+h2{text-align:center;color:#1a1a2e;margin-bottom:20px;}
+
+label{font-weight:600;color:#333;display:block;margin-top:12px;margin-bottom:4px;}
+
+select,button{
+  width:100%;
+  padding:10px;
+  margin-bottom:12px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+
+button{
+  background:linear-gradient(135deg,#3a7afe,#1f5ad6);
+  color:white;font-weight:bold;border:none;
+  padding:12px;font-size:15px;cursor:pointer;
+  transition:transform 0.1s;margin-top:8px;
+}
+button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(58,122,254,0.4);}
+
+.form-row{display:flex;gap:15px;}
+.form-row > div{flex:1;}
+
+/* Resultados */
+.result{margin-top:20px;}
+.result h3{color:#1a1a2e;margin-bottom:8px;}
+.result ul{columns:2;padding-left:20px;}
+.result li{padding:2px 0;font-size:14px;}
+
+/* ===== HORARIO TABLE ===== */
+.horario-section{margin-top:30px;}
+.horario-section h3{text-align:center;color:#1a1a2e;margin-bottom:15px;}
+
+.timetable{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+  font-size:13px;
+}
+
+.timetable th{
+  background:#1a1a2e;
+  color:white;
+  padding:10px 6px;
+  text-align:center;
+  font-weight:600;
+  border:1px solid #2a2a4e;
+  position:sticky;top:0;
+}
+
+.timetable td{
+  border:1px solid #ddd;
+  height:28px;
+  vertical-align:top;
+  padding:0;
+  position:relative;
+}
+
+.timetable tbody{
+  position:relative;
+}
+
+.timetable td.hora-col{
+  background:#f0f2f5;
+  color:#555;
+  text-align:center;
+  font-weight:500;
+  font-size:11px;
+  vertical-align:middle;
+  width:75px;
+  padding:4px;
+}
+
+.clase-block{
+  position:absolute;
+  left:2px;right:2px;
+  border-radius:5px;
+  padding:6px;
+  font-size:11px;
+  font-weight:600;
+  color:white;
+  overflow:hidden;
+  z-index:2;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
+  line-height:1.3;
+  cursor:default;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+  user-select:none;
+}
+
+.clase-block:hover{
+  z-index:10;
+  box-shadow:0 4px 14px rgba(0,0,0,0.35);
+  transform:scale(1.02);
+}
+
+.clase-block .materia-name{
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+  font-weight:700;
+  line-height:1.2;
+}
+
+.clase-block .materia-time{
+  font-size:10px;
+  font-weight:400;
+  opacity:0.9;
+  margin-top:2px;
+}
+
+.clase-block .codigo-clase{
+  font-size:9px;
+  font-weight:600;
+  opacity:0.95;
+  margin-top:2px;
+  background:rgba(0,0,0,0.2);
+  padding:2px 4px;
+  border-radius:2px;
+  text-align:center;
+  user-select:text;
+  cursor:text;
+  font-family:monospace;
+}
+
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>Buscar estudiantes disponibles</h2>
+
+<form method="POST">
+
+<label>Estudiante</label>
+<select name="estudiante" id="select-estudiante">
+<option value="">-- Todos --</option>
+{% for est in estudiantes %}
+<option value="{{est}}" {% if est == sel_estudiante %}selected{% endif %}>{{est}}</option>
+{% endfor %}
+</select>
+
+<div class="form-row">
+<div>
+  <label>Día</label>
+  <select name="dias">
+  {% for d in dias %}
+  <option value="{{d}}" {% if d == sel_dia %}selected{% endif %}>{{d}}</option>
+  {% endfor %}
+  </select>
+</div>
+<div>
+  <label>Hora inicio</label>
+  <select name="inicio">
+  {% for h in horas %}
+  <option value="{{h}}" {% if h == sel_inicio %}selected{% endif %}>{{h}}</option>
+  {% endfor %}
+  </select>
+</div>
+<div>
+  <label>Hora fin</label>
+  <select name="fin">
+  {% for h in horas %}
+  <option value="{{h}}" {% if h == sel_fin %}selected{% endif %}>{{h}}</option>
+  {% endfor %}
+  </select>
+</div>
+</div>
+
+<button type="submit">Buscar disponibilidad</button>
+
+</form>
+
+
+{% if disponibles %}
+<div class="result">
+<h3>Estudiantes disponibles ({{disponibles|length}})</h3>
+<ul>
+{% for est in disponibles %}
+<li>{{est}}</li>
+{% endfor %}
+</ul>
+</div>
+{% endif %}
+
+
+{% if horario %}
+<div class="horario-section">
+<h3>Horario semanal — {{sel_estudiante}}</h3>
+
+<script id="horario-data" type="application/json">{{ horario|tojson }}</script>
+<script id="dias-data" type="application/json">{{ dias_semana|tojson }}</script>
+
+<div id="timetable-container" style="overflow-x:auto;"></div>
+</div>
+{% endif %}
+
+</div>
+
+<script>
+(function(){
+  var dataEl = document.getElementById('horario-data');
+  var diasEl = document.getElementById('dias-data');
+  if(!dataEl || !diasEl) return;
+
+  var horario = JSON.parse(dataEl.textContent);
+  var diasSemana = JSON.parse(diasEl.textContent);
+  if(!horario.length) return;
+
+  // Find time range from data
+  var allStart = [], allEnd = [];
+  horario.forEach(function(c){
+    allStart.push(toMin(c.inicio));
+    allEnd.push(toMin(c.fin));
+  });
+  var minMin = Math.min.apply(null, allStart);
+  var maxMin = Math.max.apply(null, allEnd);
+
+  // Round to nearest 30 min
+  var slotStart = Math.floor(minMin / 30) * 30;
+  var slotEnd = Math.ceil(maxMin / 30) * 30;
+
+  // Build slots (each 30 min)
+  var slots = [];
+  for(var m = slotStart; m < slotEnd; m += 30){
+    slots.push(m);
+  }
+
+  var ROW_H = 28; // px per 30-min slot
+
+  // Build <table>
+  var html = '<table class="timetable"><thead><tr><th>HORAS</th>';
+  diasSemana.forEach(function(d){ html += '<th>'+d+'</th>'; });
+  html += '</tr></thead><tbody>';
+
+  slots.forEach(function(slotMin){
+    html += '<tr>';
+    html += '<td class="hora-col">'+formatMin(slotMin)+'</td>';
+    diasSemana.forEach(function(d){
+      html += '<td></td>';
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+
+  var container = document.getElementById('timetable-container');
+  container.innerHTML = html;
+
+  var table = container.querySelector('table');
+  var tbody = table.querySelector('tbody');
+  var rows = tbody.querySelectorAll('tr');
+
+  // Place class blocks as absolutely positioned divs inside tbody
+  horario.forEach(function(clase){
+    var colIdx = diasSemana.indexOf(clase.dia);
+    if(colIdx === -1) return;
+
+    var startMin = toMin(clase.inicio);
+    var endMin = toMin(clase.fin);
+
+    var startSlotIdx = Math.floor((startMin - slotStart) / 30);
+    var spanSlots = Math.ceil((endMin - startMin) / 30);
+
+    if(startSlotIdx < 0 || startSlotIdx >= slots.length) return;
+
+    // Calculate positioning within tbody
+    var topOffset = startSlotIdx * ROW_H; // In pixels from top of tbody
+    var blockHeight = Math.max(spanSlots * ROW_H, 40); // Minimum height for readability
+
+    // Get column widths from the first row
+    var firstRowTds = rows[0].querySelectorAll('td');
+    var horaColWidth = firstRowTds[0].offsetWidth;
+    var dataColWidth = firstRowTds[colIdx + 1].offsetWidth;
+    
+    // Calculate left position (accounting for hora column)
+    var leftOffset = 0;
+    for(var i = 0; i <= colIdx; i++){
+      if(i === 0) leftOffset += horaColWidth;
+      else leftOffset += dataColWidth;
+    }
+
+    var block = document.createElement('div');
+    block.className = 'clase-block';
+    block.style.background = clase.color;
+    block.style.height = blockHeight + 'px';
+    block.style.top = topOffset + 'px';
+    block.style.left = leftOffset + 'px';
+    block.style.width = (dataColWidth - 4) + 'px';
+    block.title = clase.materia + '\n' + formatMin(startMin) + ' - ' + formatMin(endMin);
+
+    block.innerHTML = '<div class="materia-name">' + clase.materia + '</div>'
+                    + '<div class="materia-time">' + formatMin(startMin) + ' - ' + formatMin(endMin) + '</div>'
+                    + '<div class="codigo-clase">' + clase.codigo + '</div>';
+
+    tbody.appendChild(block);
+  });
+
+  function toMin(hhmm){
+    var p = hhmm.split(':');
+    return parseInt(p[0])*60 + parseInt(p[1]);
+  }
+
+  function formatMin(m){
+    var hh = Math.floor(m/60);
+    var mm = m % 60;
+    var ampm = hh >= 12 ? 'pm' : 'am';
+    if(hh === 0) hh = 12;
+    else if(hh > 12) hh -= 12;
+    return hh + ':' + (mm < 10 ? '0'+mm : mm) + ' ' + ampm;
+  }
+})();
+</script>
+
+</body>
+</html>
