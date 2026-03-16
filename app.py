@@ -90,7 +90,8 @@ def index():
     dias_csv = df["Dia"].dropna().str.upper().unique().tolist()
     dias = [d for d in orden_dias if d in dias_csv]
 
-    estudiantes = sorted(df["Nombre_Estudiante"].dropna().unique().tolist())
+    # Extraer promociones únicas
+    promociones = sorted(df["Promocion"].dropna().unique().tolist(), key=str, reverse=True)
 
     disponibles = []
     horario = []
@@ -98,18 +99,25 @@ def index():
     sel_dia = ""
     sel_inicio = ""
     sel_fin = ""
+    sel_promocion = ""
+    estudiantes = []
 
     if request.method == "POST":
 
+        sel_promocion = request.form["promocion"]
         sel_dia = request.form["dias"]
         sel_inicio = request.form["inicio"]
         sel_fin = request.form["fin"]
         sel_estudiante = request.form["estudiante"]
 
-        disponibles = buscar_disponibles(df, [sel_dia], sel_inicio, sel_fin, sel_estudiante)
+        # Filtrar por promoción
+        df_filtered = df[df["Promocion"] == int(sel_promocion)] if sel_promocion else df
+        estudiantes = sorted(df_filtered["Nombre_Estudiante"].dropna().unique().tolist())
+
+        disponibles = buscar_disponibles(df_filtered, [sel_dia], sel_inicio, sel_fin, sel_estudiante)
 
         if sel_estudiante:
-            clases = df[df["Nombre_Estudiante"] == sel_estudiante]
+            clases = df_filtered[df_filtered["Nombre_Estudiante"] == sel_estudiante]
             materias_unicas = clases["Materia"].unique().tolist()
             color_map = {m: COLORES[i % len(COLORES)] for i, m in enumerate(materias_unicas)}
 
@@ -122,11 +130,15 @@ def index():
                     "codigo": str(int(row["Codigo_Clase"])),
                     "color": color_map.get(row["Materia"], "#3a7afe"),
                 })
+    else:
+        # Mostrar todos los estudiantes si no se ha filtrado por promoción
+        estudiantes = sorted(df["Nombre_Estudiante"].dropna().unique().tolist())
 
     return render_template(
         "index.html",
         horas=horas,
         dias=dias,
+        promociones=promociones,
         estudiantes=estudiantes,
         disponibles=disponibles,
         horario=horario,
@@ -135,6 +147,7 @@ def index():
         sel_dia=sel_dia,
         sel_inicio=sel_inicio,
         sel_fin=sel_fin,
+        sel_promocion=sel_promocion,
     )
 
 

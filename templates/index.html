@@ -164,6 +164,14 @@ button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(58,122,254,0.
 
 <form method="POST">
 
+<label>Promoción</label>
+<select name="promocion" id="select-promocion" onchange="preserveAndSubmit(event)">
+<option value="">-- Selecciona una promoción --</option>
+{% for promo in promociones %}
+<option value="{{promo}}" {% if promo|string == sel_promocion|string %}selected{% endif %}>{{promo}}</option>
+{% endfor %}
+</select>
+
 <label>Estudiante</label>
 <select name="estudiante" id="select-estudiante">
 <option value="">-- Todos --</option>
@@ -202,6 +210,15 @@ button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(58,122,254,0.
 <button type="submit">Buscar disponibilidad</button>
 
 </form>
+
+<script>
+function preserveAndSubmit(event) {
+  // Este evento se ejecuta cuando se cambia la promoción
+  // Los valores de día, hora inicio y hora fin se preservan automáticamente
+  // porque están en el formulario
+  document.querySelector('form').submit();
+}
+</script>
 
 
 {% if disponibles %}
