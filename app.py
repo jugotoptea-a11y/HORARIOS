@@ -25,7 +25,10 @@ def generar_horas():
 
 
 def convertir_24(hora):
-
+    # Si la hora está vacía, retornar None para manejarlo después
+    if not hora or not hora.strip():
+        return None
+    
     return datetime.strptime(hora.strip().upper(), "%I:%M %p").strftime("%H:%M")
 
 
@@ -43,7 +46,9 @@ def cargar():
         format="%I:%M %p", errors="coerce"
     ).dt.strftime("%H:%M")
 
-    df = df.dropna(subset=["Hora_Inicio", "Hora_Fin"])
+    # Marcar filas con horas inválidas pero NO eliminarlas,
+    # para que los estudiantes sigan apareciendo en el dropdown
+    df["_horas_validas"] = df["Hora_Inicio"].notna() & df["Hora_Fin"].notna()
 
     df["Dia"] = df["Dia"].astype(str).str.strip().str.upper()
 
@@ -54,15 +59,24 @@ def buscar_disponibles(df, dias, inicio, fin, estudiante):
 
     inicio = convertir_24(inicio)
     fin = convertir_24(fin)
+    
+    # Si no hay hora inicio/fin, usar valores por defecto
+    if inicio is None:
+        inicio = "06:00"
+    if fin is None:
+        fin = "22:00"
 
     if estudiante != "":
         df = df[df["Nombre_Estudiante"].str.contains(estudiante, case=False)]
 
     todos = set(df["Nombre_Estudiante"])
 
-    ocupados = df[
-        (df["Dia"].isin(dias)) &
-        ~((df["Hora_Fin"] <= inicio) | (df["Hora_Inicio"] >= fin))
+    # Solo usar filas con horas válidas para determinar quién está ocupado
+    df_valido = df[df["_horas_validas"] == True]
+
+    ocupados = df_valido[
+        (df_valido["Dia"].isin(dias)) &
+        ~((df_valido["Hora_Fin"] <= inicio) | (df_valido["Hora_Inicio"] >= fin))
     ]
 
     ocupados_set = set(ocupados["Nombre_Estudiante"])
@@ -96,7 +110,7 @@ def index():
     disponibles = []
     horario = []
     sel_estudiante = ""
-    sel_dia = ""
+    sel_dias = []
     sel_inicio = ""
     sel_fin = ""
     sel_promocion = ""
@@ -105,7 +119,7 @@ def index():
     if request.method == "POST":
 
         sel_promocion = request.form["promocion"]
-        sel_dia = request.form["dias"]
+        sel_dias = request.form.getlist("dias")  # Obtener lista de días
         sel_inicio = request.form["inicio"]
         sel_fin = request.form["fin"]
         sel_estudiante = request.form["estudiante"]
@@ -114,7 +128,24 @@ def index():
         df_filtered = df[df["Promocion"] == int(sel_promocion)] if sel_promocion else df
         estudiantes = sorted(df_filtered["Nombre_Estudiante"].dropna().unique().tolist())
 
-        disponibles = buscar_disponibles(df_filtered, [sel_dia], sel_inicio, sel_fin, sel_estudiante)
+        # Buscar disponibles - intersección entre todos los días seleccionados
+        # El estudiante debe ser libre en TODOS los días, no solo en alguno
+        if sel_dias:
+            libres_comunes: set = set()
+            primer_dia = True
+            for dia in sel_dias:
+                inicio_dia = str(request.form.get(f"inicio_{dia}", sel_inicio))
+                fin_dia = str(request.form.get(f"fin_{dia}", sel_fin))
+                libres_dia = set(buscar_disponibles(df_filtered, [dia], inicio_dia, fin_dia, sel_estudiante))
+                if primer_dia:
+                    libres_comunes = libres_dia
+                    primer_dia = False
+                else:
+                    libres_comunes = libres_comunes.intersection(libres_dia)
+
+            disponibles = sorted(libres_comunes)
+        else:
+            disponibles = []
 
         if sel_estudiante:
             clases = df_filtered[df_filtered["Nombre_Estudiante"] == sel_estudiante]
@@ -122,12 +153,19 @@ def index():
             color_map = {m: COLORES[i % len(COLORES)] for i, m in enumerate(materias_unicas)}
 
             for _, row in clases.iterrows():
+                # Saltar filas sin horas válidas para el horario visual
+                if not row.get("_horas_validas", False):
+                    continue
+                try:
+                    codigo = str(int(row["Codigo_Clase"]))
+                except (ValueError, TypeError):
+                    codigo = str(row["Codigo_Clase"]) if pd.notna(row["Codigo_Clase"]) else "--"
                 horario.append({
                     "dia": row["Dia"],
                     "inicio": row["Hora_Inicio"],
                     "fin": row["Hora_Fin"],
                     "materia": str(row["Materia"]),
-                    "codigo": str(int(row["Codigo_Clase"])),
+                    "codigo": codigo,
                     "color": color_map.get(row["Materia"], "#3a7afe"),
                 })
     else:
@@ -144,7 +182,7 @@ def index():
         horario=horario,
         dias_semana=dias,
         sel_estudiante=sel_estudiante,
-        sel_dia=sel_dia,
+        sel_dias=sel_dias,
         sel_inicio=sel_inicio,
         sel_fin=sel_fin,
         sel_promocion=sel_promocion,

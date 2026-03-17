@@ -6,7 +6,7 @@ import pdfplumber
 import pandas as pd
 
 
-BASE_DIR = Path(r"C:\Users\sebas\Downloads\HORARIO\2026")
+BASE_DIR = Path(r"C:\Users\sebas\Downloads\HORARIO\H")
 OUTPUT_CSV = Path(r"C:\Users\sebas\Downloads\HORARIO\horarios_extraidos.csv")
 
 DIAS = [
@@ -202,32 +202,40 @@ def main():
     if not BASE_DIR.exists():
         sys.exit("Carpeta no encontrada")
 
-    promocion = BASE_DIR.name
-
-    pdfs = sorted(BASE_DIR.rglob("*.pdf"))
-
-    if not pdfs:
-        sys.exit("No se encontraron PDFs")
-
-    print("PDFs encontrados:", len(pdfs))
-
     all_rows = []
 
-    for pdf_path in pdfs:
+    # Iterar sobre las subcarpetas de H (2025, 2026, etc.)
+    for promocion_dir in sorted(BASE_DIR.iterdir()):
+        
+        if not promocion_dir.is_dir():
+            continue
+        
+        promocion = promocion_dir.name
 
-        print("Procesando:", pdf_path.name)
+        pdfs = sorted(promocion_dir.rglob("*.pdf"))
 
-        try:
+        if not pdfs:
+            print(f"No se encontraron PDFs en {promocion}")
+            continue
 
-            rows = extraer_pdf(pdf_path, promocion)
+        print(f"\nPromoción: {promocion}")
+        print(f"PDFs encontrados: {len(pdfs)}")
 
-            print("  materias:", len(rows))
+        for pdf_path in pdfs:
 
-            all_rows.extend(rows)
+            print(f"  Procesando: {pdf_path.name}")
 
-        except Exception as e:
+            try:
 
-            print("  error:", e)
+                rows = extraer_pdf(pdf_path, promocion)
+
+                print(f"    Materias: {len(rows)}")
+
+                all_rows.extend(rows)
+
+            except Exception as e:
+
+                print(f"    Error: {e}")
 
     if not all_rows:
         sys.exit("No se extrajeron datos")
