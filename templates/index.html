@@ -272,13 +272,19 @@ button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(58,122,254,0.
 
 <form method="POST">
 
-<label>Promoción</label>
-<select name="promocion" id="select-promocion" onchange="preserveAndSubmit(event)">
-<option value="">-- Selecciona una promoción --</option>
-{% for promo in promociones %}
-<option value="{{promo}}" {% if promo|string == sel_promocion|string %}selected{% endif %}>{{promo}}</option>
-{% endfor %}
-</select>
+<label>Promoción <small>(selecciona una o varias, o "Todas")</small></label>
+<div class="days-selector" id="promociones-selector">
+  <div class="day-checkbox promo-todas">
+    <input type="checkbox" name="promociones" value="TODAS" id="promo-all" onchange="toggleTodasPromociones()" {% if not sel_promociones %}checked{% endif %}>
+    <label for="promo-all" data-order="" style="background:linear-gradient(135deg,#1a1a2e,#2a2a4e);color:white;border-color:#1a1a2e;">&#9733; Todas</label>
+  </div>
+  {% for promo in promociones %}
+  <div class="day-checkbox">
+    <input type="checkbox" name="promociones" value="{{promo}}" id="promo-{{loop.index}}" {% if promo|string in sel_promociones %}checked{% endif %} onchange="actualizarPromociones()">
+    <label for="promo-{{loop.index}}" data-order="">{{promo}}</label>
+  </div>
+  {% endfor %}
+</div>
 
 <label>Estudiante</label>
 <select name="estudiante" id="select-estudiante">
@@ -330,6 +336,7 @@ button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(58,122,254,0.
 <script>
 var horasDisponibles = JSON.parse('{{ horas|tojson|safe }}') || [];
 var diasSeleccionados = JSON.parse('{{ sel_dias|tojson|safe }}') || [];
+var todosEstudiantesPorPromo = {{ todos_por_promo|tojson|safe }};
 var jornadasGuardadas = {};
 
 // Recuperar jornadas guardadas del localStorage si existen
@@ -492,6 +499,7 @@ function guardarJornada(select) {
 // Inicializar al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
   actualizarJornadas();
+  filtrarEstudiantes(); // Aplicar filtro inicial de estudiantes según promociones pre-seleccionadas
   
   // Agregar evento al selector de hora inicio por defecto
   var selectInicio = document.getElementById('inicio-default');
@@ -505,8 +513,90 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-function preserveAndSubmit(event) {
-  document.querySelector('form').submit();
+function filtrarEstudiantes() {
+  var checkboxTodas = document.getElementById('promo-all');
+  var checkboxesIndividuales = document.querySelectorAll('input[name="promociones"]:not(#promo-all):checked');
+  var selectEst = document.getElementById('select-estudiante');
+  var valorActual = selectEst.value; // Conservar selección actual si es posible
+
+  var listaFiltrada = [];
+
+  if (checkboxTodas.checked || checkboxesIndividuales.length === 0) {
+    // Mostrar TODOS los estudiantes de todas las promociones
+    Object.keys(todosEstudiantesPorPromo).forEach(function(promo) {
+      listaFiltrada = listaFiltrada.concat(todosEstudiantesPorPromo[promo]);
+    });
+  } else {
+    // Mostrar solo los estudiantes de las promociones seleccionadas
+    checkboxesIndividuales.forEach(function(cb) {
+      var promo = cb.value;
+      if (todosEstudiantesPorPromo[promo]) {
+        listaFiltrada = listaFiltrada.concat(todosEstudiantesPorPromo[promo]);
+      }
+    });
+  }
+
+  // Eliminar duplicados y ordenar
+  listaFiltrada = listaFiltrada.filter(function(v, i, a) { return a.indexOf(v) === i; });
+  listaFiltrada.sort();
+
+  // Reconstruir las opciones del select
+  var html = '<option value="">-- Todos --</option>';
+  listaFiltrada.forEach(function(est) {
+    var sel = (est === valorActual) ? ' selected' : '';
+    html += '<option value="' + est + '"' + sel + '>' + est + '</option>';
+  });
+  selectEst.innerHTML = html;
+
+  // Si el estudiante anterior ya no está en la lista, limpiar selección
+  if (valorActual && selectEst.value !== valorActual) {
+    selectEst.value = '';
+  }
+}
+
+function toggleTodasPromociones() {
+  var checkboxTodas = document.getElementById('promo-all');
+  var checkboxesPromociones = document.querySelectorAll('input[name="promociones"]:not(#promo-all)');
+  
+  if (checkboxTodas.checked) {
+    // Al marcar "Todas": desmarcar las individuales
+    checkboxesPromociones.forEach(function(checkbox) {
+      checkbox.checked = false;
+      var label = checkbox.nextElementSibling;
+      label.setAttribute('data-order', '');
+    });
+  }
+  // Actualizar el dropdown de estudiantes inmediatamente
+  filtrarEstudiantes();
+}
+
+function actualizarPromociones() {
+  var checkboxTodas = document.getElementById('promo-all');
+  var checkboxesPromociones = document.querySelectorAll('input[name="promociones"]:not(#promo-all)');
+  var algunaSeleccionada = Array.from(checkboxesPromociones).some(function(cb) { return cb.checked; });
+  
+  if (algunaSeleccionada) {
+    // Hay individuales seleccionadas: desmarcar "Todas"
+    checkboxTodas.checked = false;
+  } else {
+    // No hay ninguna individual: auto-marcar "Todas"
+    checkboxTodas.checked = true;
+  }
+  
+  // Actualizar números de orden en checkboxes individuales
+  var order = 1;
+  checkboxesPromociones.forEach(function(checkbox) {
+    var label = checkbox.nextElementSibling;
+    if (checkbox.checked) {
+      label.setAttribute('data-order', order);
+      order++;
+    } else {
+      label.setAttribute('data-order', '');
+    }
+  });
+
+  // Actualizar el dropdown de estudiantes inmediatamente
+  filtrarEstudiantes();
 }
 </script>
 

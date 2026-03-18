@@ -113,19 +113,30 @@ def index():
     sel_dias = []
     sel_inicio = ""
     sel_fin = ""
-    sel_promocion = ""
+    sel_promociones = []
     estudiantes = []
 
     if request.method == "POST":
 
-        sel_promocion = request.form["promocion"]
+        sel_promociones_raw = request.form.getlist("promociones")  # Obtener lista de promociones
+        # Detectar si se seleccionó "TODAS" o si no hay selección
+        todas_seleccionadas = "TODAS" in sel_promociones_raw
+        # Filtrar solo promociones reales (excluir el valor especial "TODAS" y vacíos)
+        sel_promociones = [p for p in sel_promociones_raw if p and p != "TODAS"]
+
         sel_dias = request.form.getlist("dias")  # Obtener lista de días
         sel_inicio = request.form["inicio"]
         sel_fin = request.form["fin"]
         sel_estudiante = request.form["estudiante"]
 
-        # Filtrar por promoción
-        df_filtered = df[df["Promocion"] == int(sel_promocion)] if sel_promocion else df
+        # Filtrar por promociones (si hay seleccionadas y NO es "Todas")
+        if sel_promociones and not todas_seleccionadas:
+            df_filtered = df[df["Promocion"].astype(str).isin([str(p) for p in sel_promociones])]
+        else:
+            df_filtered = df
+            # Si es "Todas", limpiar sel_promociones para que quede vacío (sin checkmarks individuales)
+            if todas_seleccionadas:
+                sel_promociones = []
         estudiantes = sorted(df_filtered["Nombre_Estudiante"].dropna().unique().tolist())
 
         # Buscar disponibles - intersección entre todos los días seleccionados
@@ -172,6 +183,15 @@ def index():
         # Mostrar todos los estudiantes si no se ha filtrado por promoción
         estudiantes = sorted(df["Nombre_Estudiante"].dropna().unique().tolist())
 
+    # Construir mapa promocion -> lista de estudiantes para filtrado dinámico en JS
+    todos_por_promo = {}
+    for promo in promociones:
+        est_promo = sorted(
+            df[df["Promocion"].astype(str) == str(promo)]["Nombre_Estudiante"]
+            .dropna().unique().tolist()
+        )
+        todos_por_promo[str(promo)] = est_promo
+
     return render_template(
         "index.html",
         horas=horas,
@@ -185,7 +205,8 @@ def index():
         sel_dias=sel_dias,
         sel_inicio=sel_inicio,
         sel_fin=sel_fin,
-        sel_promocion=sel_promocion,
+        sel_promociones=sel_promociones,
+        todos_por_promo=todos_por_promo,
     )
 
 
