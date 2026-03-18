@@ -364,35 +364,38 @@ function horaAMinutos(hora) {
 }
 
 // Función para actualizar horas finales disponibles
-function actualizarHorasFin(selectInicio, selectFin) {
+function actualizarHorasFin(selectInicio, selectFin, valorFinARestaurar) {
   var horaInicioSeleccionada = selectInicio.value;
-  
+  // Guardar el valor actual antes de reconstruir las opciones
+  var finPrevio = valorFinARestaurar !== undefined ? valorFinARestaurar : selectFin.value;
+
   if(!horaInicioSeleccionada) {
     // Si no hay hora inicial seleccionada, mostrar todas las horas
     var optionsHTML = '<option value="">-- Usar por defecto --</option>';
     horasDisponibles.forEach(function(hora) {
-      optionsHTML += '<option value="' + hora + '">' + hora + '</option>';
+      var sel = (hora === finPrevio) ? ' selected' : '';
+      optionsHTML += '<option value="' + hora + '"' + sel + '>' + hora + '</option>';
     });
     selectFin.innerHTML = optionsHTML;
     return;
   }
-  
+
   var minutosInicio = horaAMinutos(horaInicioSeleccionada);
-  
-  // Generar opciones filtradas para fin
+
+  // Generar opciones filtradas para fin (solo horas >= inicio)
   var optionsHTML = '<option value="">-- Usar por defecto --</option>';
   horasDisponibles.forEach(function(hora) {
     var minutosHora = horaAMinutos(hora);
     if(minutosHora >= minutosInicio) {
-      optionsHTML += '<option value="' + hora + '">' + hora + '</option>';
+      var sel = (hora === finPrevio) ? ' selected' : '';
+      optionsHTML += '<option value="' + hora + '"' + sel + '>' + hora + '</option>';
     }
   });
-  
+
   selectFin.innerHTML = optionsHTML;
-  
-  // Si la hora fin actual ya no es válida, vaciar la selección
-  var finActual = selectFin.value;
-  if(finActual && horaAMinutos(finActual) < minutosInicio) {
+
+  // Si el valor previo ya no está en las opciones (está antes del inicio), limpiar
+  if(finPrevio && selectFin.value !== finPrevio) {
     selectFin.value = '';
   }
 }
@@ -474,12 +477,13 @@ function actualizarJornadas() {
     select.style.fontSize = '13px';
   });
   
-  // Aplicar filtrado inicial a las horas fin
+  // Aplicar filtrado inicial a las horas fin, preservando el valor guardado
   document.querySelectorAll('.jornada-inicio').forEach(function(selectInicio) {
     var dia = selectInicio.getAttribute('data-dia');
     var selectFin = document.querySelector('select[name="fin_' + dia + '"]');
     if(selectFin) {
-      actualizarHorasFin(selectInicio, selectFin);
+      var finGuardado = jornadasGuardadas['fin_' + dia] || '';
+      actualizarHorasFin(selectInicio, selectFin, finGuardado);
     }
   });
 }
