@@ -86,6 +86,19 @@ def buscar_disponibles(df, dias, inicio, fin, estudiante):
     return libres
 
 
+def construir_info_estudiantes(df):
+    """Retorna un dict {Nombre_Estudiante: ID_Estudiante} con el primer registro de cada estudiante."""
+    info = {}
+    for _, row in df.drop_duplicates(subset="Nombre_Estudiante").iterrows():
+        nombre = row["Nombre_Estudiante"]
+        try:
+            doc = str(int(row["ID_Estudiante"]))
+        except (ValueError, TypeError):
+            doc = str(row["ID_Estudiante"]) if pd.notna(row["ID_Estudiante"]) else ""
+        info[nombre] = doc
+    return info
+
+
 COLORES = [
     "#3a7afe", "#e74c3c", "#2ecc71", "#f39c12", "#9b59b6",
     "#1abc9c", "#e67e22", "#2980b9", "#c0392b", "#27ae60",
@@ -108,6 +121,7 @@ def index():
     promociones = sorted(df["Promocion"].dropna().unique().tolist(), key=str, reverse=True)
 
     disponibles = []
+    disponibles_info = {}  # {nombre: id_documento}
     horario = []
     sel_estudiante = ""
     sel_dias = []
@@ -158,6 +172,10 @@ def index():
         else:
             disponibles = []
 
+        # Construir mapa nombre -> documento para los disponibles
+        info_map = construir_info_estudiantes(df_filtered)
+        disponibles_info = {nombre: info_map.get(nombre, "") for nombre in disponibles}
+
         if sel_estudiante:
             clases = df_filtered[df_filtered["Nombre_Estudiante"] == sel_estudiante]
             materias_unicas = clases["Materia"].unique().tolist()
@@ -199,6 +217,7 @@ def index():
         promociones=promociones,
         estudiantes=estudiantes,
         disponibles=disponibles,
+        disponibles_info=disponibles_info,
         horario=horario,
         dias_semana=dias,
         sel_estudiante=sel_estudiante,

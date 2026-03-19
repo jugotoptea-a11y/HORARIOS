@@ -161,8 +161,26 @@ button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(58,122,254,0.
 /* Resultados */
 .result{margin-top:20px;}
 .result h3{color:#1a1a2e;margin-bottom:8px;}
-.result ul{columns:2;padding-left:20px;}
-.result li{padding:2px 0;font-size:14px;}
+.result-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+  column-count:unset;
+}
+.result-table td{
+  padding:3px 8px 3px 0;
+  vertical-align:middle;
+}
+.result-table td.est-nombre{
+  color:#333;
+  font-weight:400;
+  padding-right:16px;
+}
+.result-table td.est-doc{
+  color:#333;
+  font-weight:400;
+  font-size:14px;
+}
 
 /* ===== HORARIO TABLE ===== */
 .horario-section{margin-top:30px;}
@@ -608,11 +626,11 @@ function actualizarPromociones() {
 {% if disponibles %}
 <div class="result">
 <h3>Estudiantes disponibles ({{disponibles|length}})</h3>
-<ul>
+<table class="result-table">
 {% for est in disponibles %}
-<li>{{est}}</li>
+<tr><td class="est-nombre">{{est}}</td><td class="est-doc">{{disponibles_info[est]}}</td></tr>
 {% endfor %}
-</ul>
+</table>
 </div>
 {% endif %}
 
