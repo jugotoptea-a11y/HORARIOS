@@ -415,6 +415,82 @@
       cursor: text;
       font-family: monospace;
     }
+
+    /* ===== TOGGLE DE MODO ===== */
+    .modo-toggle-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 18px 0 10px;
+    }
+
+    .modo-toggle-label {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .modo-toggle {
+      display: flex;
+      background: #eef2f7;
+      border-radius: 50px;
+      padding: 4px;
+      gap: 4px;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .modo-toggle input[type="radio"] {
+      display: none;
+    }
+
+    .modo-toggle label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 22px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      transition: all 0.3s ease;
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .modo-toggle input[value="disponibilidad"]:checked+label {
+      background: linear-gradient(135deg, #3a7afe, #1f5ad6);
+      color: white;
+      box-shadow: 0 2px 10px rgba(58, 122, 254, 0.45);
+    }
+
+    .modo-toggle input[value="antidisponibilidad"]:checked+label {
+      background: linear-gradient(135deg, #e85d75, #c0392b);
+      color: white;
+      box-shadow: 0 2px 10px rgba(232, 93, 117, 0.45);
+    }
+
+    .modo-toggle label:hover {
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    .modo-toggle input:checked+label:hover {
+      background: none;
+    }
+
+    /* Colores de resultado segun modo */
+    .result-antidisponibilidad h3 {
+      color: #c0392b;
+    }
+
+    button.btn-antidisponibilidad {
+      background: linear-gradient(135deg, #e85d75, #c0392b);
+    }
+
+    button.btn-antidisponibilidad:hover {
+      box-shadow: 0 4px 12px rgba(232, 93, 117, 0.4);
+    }
   </style>
 </head>
 
@@ -428,15 +504,18 @@
       <label>Promoción <small>(selecciona una o varias, o "Todas")</small></label>
       <div class="days-selector" id="promociones-selector">
         <div class="day-checkbox promo-todas">
-          <input type="checkbox" name="promociones" value="TODAS" id="promo-all" onchange="toggleTodasPromociones()" {% if not sel_promociones %}checked{% endif %}>
+          <input type="checkbox" name="promociones" value="TODAS" id="promo-all" onchange="toggleTodasPromociones()" {%
+            if not sel_promociones %}checked{% endif %}>
           <label for="promo-all" data-order="{% if not sel_promociones %}1{% endif %}"
             style="background:linear-gradient(135deg,#1a1a2e,#2a2a4e);color:white;border-color:#1a1a2e;">&#9733;
             Todas</label>
         </div>
         {% for promo in promociones %}
         <div class="day-checkbox">
-          <input type="checkbox" name="promociones" value="{{promo}}" id="promo-{{loop.index}}" {% if promo|string in sel_promociones %}checked{% endif %} onchange="actualizarPromociones()">
-          <label for="promo-{{loop.index}}" data-order="{% if promo|string in sel_promociones %}{{ loop.index }}{% endif %}">{{promo}}</label>
+          <input type="checkbox" name="promociones" value="{{promo}}" id="promo-{{loop.index}}" {% if promo|string in
+            sel_promociones %}checked{% endif %} onchange="actualizarPromociones()">
+          <label for="promo-{{loop.index}}"
+            data-order="{% if promo|string in sel_promociones %}{{ loop.index }}{% endif %}">{{promo}}</label>
         </div>
         {% endfor %}
       </div>
@@ -445,7 +524,8 @@
       <div class="multiselect-dropdown" id="estudiantes-dropdown">
         <div class="dropdown-toggle" onclick="toggleDropdown()">-- Todos --</div>
         <div class="dropdown-menu" id="estudiantes-menu">
-          <label class="est-label est-todos-label" onclick="toggleTodosEstudiantes()" style="cursor: pointer; user-select: none; font-weight: 600;">
+          <label class="est-label est-todos-label" onclick="toggleTodosEstudiantes()"
+            style="cursor: pointer; user-select: none; font-weight: 600;">
             ☐ -- Todos --
           </label>
           {% for est in estudiantes %}
@@ -492,7 +572,20 @@
         </div>
       </div>
 
-      <button type="submit">Buscar disponibilidad</button>
+      <!-- TOGGLE DE MODO -->
+      <div class="modo-toggle-wrapper">
+        <span class="modo-toggle-label">Modo de búsqueda</span>
+        <div class="modo-toggle">
+          <input type="radio" name="modo" id="modo-disp" value="disponibilidad" {% if modo=='disponibilidad' %}checked{%
+            endif %} onchange="actualizarModo()">
+          <label for="modo-disp">Disponibilidad</label>
+          <input type="radio" name="modo" id="modo-anti" value="antidisponibilidad" {% if modo=='antidisponibilidad'
+            %}checked{% endif %} onchange="actualizarModo()">
+          <label for="modo-anti">Antidisponibilidad</label>
+        </div>
+      </div>
+
+      <button type="submit" id="btn-buscar">Buscar disponibilidad</button>
 
     </form>
 
@@ -500,7 +593,7 @@
       var horasDisponibles = JSON.parse('{{ horas|tojson|safe }}') || [];
       var diasSeleccionados = JSON.parse('{{ sel_dias|tojson|safe }}') || [];
       var selEstudiantes = JSON.parse('{{ sel_estudiante|tojson|safe }}') || [];
-      var todosEstudiantesPorPromo = {{ todos_por_promo|tojson|safe }};
+      var todosEstudiantesPorPromo = {{ todos_por_promo| tojson | safe }};
       var jornadasGuardadas = {};
 
       // Recuperar jornadas guardadas del localStorage si existen
@@ -669,6 +762,7 @@
         actualizarJornadas();
         actualizarPromociones(); // Actualizar órdenes de promociones en la inicialización
         filtrarEstudiantes(true); // Aplicar filtro inicial de estudiantes según promociones pre-seleccionadas
+        actualizarModo(); // Sincronizar botón con el modo inicial
 
         // Agregar evento al selector de hora inicio por defecto
         var selectInicio = document.getElementById('inicio-default');
@@ -697,19 +791,19 @@
       function toggleTodosEstudiantes() {
         var checkboxes = document.querySelectorAll('.est-checkbox');
         var algunaSeleccionada = Array.from(checkboxes).some(function (cb) { return cb.checked; });
-        
+
         // Si alguna está seleccionada, desmarcar todas; si ninguna, marcar todas
         checkboxes.forEach(function (cb) {
           cb.checked = !algunaSeleccionada;
         });
-        
+
         actualizarTextoDropdown();
       }
 
       function actualizarSeleccionEstudiantes() {
         var checkboxes = document.querySelectorAll('.est-checkbox');
         var algunaSeleccionada = Array.from(checkboxes).some(function (cb) { return cb.checked; });
-        
+
         // Solo actualizar el display
         actualizarTextoDropdown();
       }
@@ -717,11 +811,11 @@
       function actualizarTextoDropdown() {
         var toggleDeTexto = document.querySelector('.dropdown-toggle');
         if (!toggleDeTexto) return;
-        
+
         var seleccionados = Array.from(document.querySelectorAll('.est-checkbox:checked')).map(function (cb) {
           return cb.value;
         });
-        
+
         if (seleccionados.length === 0) {
           toggleDeTexto.textContent = '-- Todos --';
         } else if (seleccionados.length === 1) {
@@ -798,6 +892,20 @@
         filtrarEstudiantes();
       }
 
+      function actualizarModo() {
+        var modoAnti = document.getElementById('modo-anti');
+        var btn = document.getElementById('btn-buscar');
+        if (!modoAnti || !btn) return;
+
+        if (modoAnti.checked) {
+          btn.textContent = 'Buscar antidisponibilidad';
+          btn.classList.add('btn-antidisponibilidad');
+        } else {
+          btn.textContent = 'Buscar disponibilidad';
+          btn.classList.remove('btn-antidisponibilidad');
+        }
+      }
+
       function actualizarPromociones() {
         var checkboxTodas = document.getElementById('promo-all');
         var checkboxesPromociones = document.querySelectorAll('input[name="promociones"]:not(#promo-all)');
@@ -833,8 +941,14 @@
 
 
     {% if disponibles %}
-    <div class="result">
-      <h3>Estudiantes disponibles ({{disponibles|length}})</h3>
+    <div class="result {% if modo == 'antidisponibilidad' %}result-antidisponibilidad{% endif %}">
+      <h3>
+        {% if modo == 'antidisponibilidad' %}
+        Estudiantes NO disponibles ({{disponibles|length}})
+        {% else %}
+        Estudiantes disponibles ({{disponibles|length}})
+        {% endif %}
+      </h3>
       <table class="result-table">
         {% for est in disponibles %}
         <tr>

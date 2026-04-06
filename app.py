@@ -86,6 +86,32 @@ def buscar_disponibles(df, dias, inicio, fin, estudiantes_seleccionados):
     return libres
 
 
+def buscar_no_disponibles(df, dias, inicio, fin, estudiantes_seleccionados):
+    """Antidisponibilidad: retorna estudiantes que TIENEN clase en el bloque indicado."""
+
+    inicio = convertir_24(inicio)
+    fin = convertir_24(fin)
+
+    if inicio is None:
+        inicio = "06:00"
+    if fin is None:
+        fin = "22:00"
+
+    if estudiantes_seleccionados:
+        df = df[df["Nombre_Estudiante"].isin(estudiantes_seleccionados)]
+
+    df_valido = df[df["_horas_validas"] == True]
+
+    ocupados = df_valido[
+        (df_valido["Dia"].isin(dias)) &
+        ~((df_valido["Hora_Fin"] <= inicio) | (df_valido["Hora_Inicio"] >= fin))
+    ]
+
+    ocupados_set = sorted(set(ocupados["Nombre_Estudiante"]))
+
+    return ocupados_set
+
+
 def construir_info_estudiantes(df):
     """Retorna un dict {Nombre_Estudiante: ID_Estudiante} con el primer registro de cada estudiante."""
     info = {}
@@ -130,7 +156,10 @@ def index():
     sel_promociones = []
     estudiantes = []
 
+    modo = "disponibilidad"  # valor por defecto
+
     if request.method == "POST":
+        modo = request.form.get("modo", "disponibilidad")
 
         sel_promociones_raw = request.form.getlist("promociones")  # Obtener lista de promociones
         # Detectar si se seleccionó "TODAS" o si no hay selección
@@ -158,22 +187,31 @@ def index():
                 sel_promociones = []
         estudiantes = sorted(df_filtered["Nombre_Estudiante"].dropna().unique().tolist())
 
-        # Buscar disponibles - intersección entre todos los días seleccionados
-        # El estudiante debe ser libre en TODOS los días, no solo en alguno
+        # Buscar según el modo seleccionado
         if sel_dias:
-            libres_comunes: set = set()
-            primer_dia = True
-            for dia in sel_dias:
-                inicio_dia = str(request.form.get(f"inicio_{dia}", sel_inicio))
-                fin_dia = str(request.form.get(f"fin_{dia}", sel_fin))
-                libres_dia = set(buscar_disponibles(df_filtered, [dia], inicio_dia, fin_dia, sel_estudiante))
-                if primer_dia:
-                    libres_comunes = libres_dia
-                    primer_dia = False
-                else:
-                    libres_comunes = libres_comunes.intersection(libres_dia)
-
-            disponibles = sorted(libres_comunes)
+            if modo == "antidisponibilidad":
+                # Unión: aparece si tiene clase en CUALQUIERA de los días seleccionados
+                ocupados_union: set = set()
+                for dia in sel_dias:
+                    inicio_dia = str(request.form.get(f"inicio_{dia}", sel_inicio))
+                    fin_dia = str(request.form.get(f"fin_{dia}", sel_fin))
+                    ocupados_dia = set(buscar_no_disponibles(df_filtered, [dia], inicio_dia, fin_dia, sel_estudiante))
+                    ocupados_union = ocupados_union.union(ocupados_dia)
+                disponibles = sorted(ocupados_union)
+            else:
+                # Disponibilidad: intersección — libre en TODOS los días seleccionados
+                libres_comunes: set = set()
+                primer_dia = True
+                for dia in sel_dias:
+                    inicio_dia = str(request.form.get(f"inicio_{dia}", sel_inicio))
+                    fin_dia = str(request.form.get(f"fin_{dia}", sel_fin))
+                    libres_dia = set(buscar_disponibles(df_filtered, [dia], inicio_dia, fin_dia, sel_estudiante))
+                    if primer_dia:
+                        libres_comunes = libres_dia
+                        primer_dia = False
+                    else:
+                        libres_comunes = libres_comunes.intersection(libres_dia)
+                disponibles = sorted(libres_comunes)
         else:
             disponibles = []
 
@@ -236,6 +274,7 @@ def index():
         sel_fin=sel_fin,
         sel_promociones=sel_promociones,
         todos_por_promo=todos_por_promo,
+        modo=modo,
     )
 
 
