@@ -2,766 +2,980 @@
 <html lang="es">
 
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buscador de disponibilidad</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buscador de disponibilidad</title>
 
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-body{
-  font-family:'Segoe UI',Arial,sans-serif;
-  background:#eef2f7;
-  display:flex;
-  justify-content:center;
-  padding:30px 10px;
-}
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #eef2f7;
+      display: flex;
+      justify-content: center;
+      padding: 30px 10px;
+    }
 
-.container{
-  background:white;
-  padding:30px;
-  border-radius:12px;
-  box-shadow:0 4px 24px rgba(0,0,0,0.1);
-  width:100%;
-  max-width:1200px;
-}
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 1200px;
+    }
 
-h2{text-align:center;color:#1a1a2e;margin-bottom:20px;}
+    h2 {
+      text-align: center;
+      color: #1a1a2e;
+      margin-bottom: 20px;
+    }
 
-label{font-weight:600;color:#333;display:block;margin-top:12px;margin-bottom:4px;}
+    label {
+      font-weight: 600;
+      color: #333;
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 4px;
+    }
 
-small{font-size:12px;color:#666;}
+    small {
+      font-size: 12px;
+      color: #666;
+    }
 
-/* ===== SELECTOR DE DÍAS PERSONALIZADO ===== */
-.days-selector{
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
-  gap:10px;
-  margin-bottom:12px;
-}
+    /* ===== SELECTOR DE DÍAS PERSONALIZADO ===== */
+    .days-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
 
-.day-checkbox{
-  position:relative;
-}
+    .day-checkbox {
+      position: relative;
+    }
 
-.day-checkbox input{
-  display:none;
-}
+    .day-checkbox input {
+      display: none;
+    }
 
-.day-checkbox label{
-  display:flex;
-  align-items:center;
-  padding:10px 12px;
-  background:#f5f5f5;
-  border:2px solid #ddd;
-  border-radius:8px;
-  cursor:pointer;
-  transition:all 0.3s ease;
-  font-weight:600;
-  color:#555;
-  margin:0;
-  position:relative;
-}
+    .day-checkbox label {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      background: #f5f5f5;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      color: #555;
+      margin: 0;
+      position: relative;
+    }
 
-.day-checkbox input:checked + label{
-  background:linear-gradient(135deg, #3a7afe, #1f5ad6);
-  color:white;
-  border-color:#1f5ad6;
-  box-shadow:0 2px 8px rgba(58, 122, 254, 0.3);
-}
+    .day-checkbox input:checked+label {
+      background: linear-gradient(135deg, #3a7afe, #1f5ad6);
+      color: white;
+      border-color: #1f5ad6;
+      box-shadow: 0 2px 8px rgba(58, 122, 254, 0.3);
+    }
 
-.day-checkbox label::before{
-  content:attr(data-order);
-  position:absolute;
-  top:-8px;
-  right:-8px;
-  background:#ff6b6b;
-  color:white;
-  width:20px;
-  height:20px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:11px;
-  font-weight:700;
-  opacity:0;
-  transition:opacity 0.3s ease;
-}
+    .day-checkbox label::before {
+      content: attr(data-order);
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #ff6b6b;
+      color: white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
 
-.day-checkbox input:checked + label::before{
-  opacity:1;
-}
+    .day-checkbox input:checked+label::before {
+      opacity: 1;
+    }
 
-.day-checkbox label::after{
-  content:'';
-  display:none;
-}
+    .day-checkbox label::after {
+      content: '';
+      display: none;
+    }
 
-/* ===== JORNADAS POR DÍA ===== */
-.jornadas-container{
-  margin:15px 0;
-}
+    /* ===== JORNADAS POR DÍA ===== */
+    .jornadas-container {
+      margin: 15px 0;
+    }
 
-.jornada-row{
-  display:grid;
-  grid-template-columns:150px 1fr 1fr;
-  gap:12px;
-  align-items:end;
-  margin-bottom:12px;
-  padding:12px;
-  background:#f9f9f9;
-  border-radius:8px;
-  border-left:4px solid #3a7afe;
-}
+    .jornada-row {
+      display: grid;
+      grid-template-columns: 150px 1fr 1fr;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border-left: 4px solid #3a7afe;
+    }
 
-.jornada-dia{
-  font-weight:600;
-  color:#1a1a2e;
-}
+    .jornada-dia {
+      font-weight: 600;
+      color: #1a1a2e;
+    }
 
-.jornada-dia .numero{
-  display:inline-block;
-  background:#ff6b6b;
-  color:white;
-  width:24px;
-  height:24px;
-  border-radius:50%;
-  text-align:center;
-  line-height:24px;
-  font-size:12px;
-  margin-right:6px;
-}
+    .jornada-dia .numero {
+      display: inline-block;
+      background: #ff6b6b;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 24px;
+      font-size: 12px;
+      margin-right: 6px;
+    }
 
-select,button{
-  width:100%;
-  padding:10px;
-  margin-bottom:12px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  font-size:14px;
-}
+    select,
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
 
-select[multiple]{
-  padding:6px;
-  height:auto;
-}
+    select[multiple] {
+      padding: 6px;
+      height: auto;
+    }
 
-button{
-  background:linear-gradient(135deg,#3a7afe,#1f5ad6);
-  color:white;font-weight:bold;border:none;
-  padding:12px;font-size:15px;cursor:pointer;
-  transition:transform 0.1s;margin-top:8px;
-}
-button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(58,122,254,0.4);}
+    /* ===== DROPDOWN MULTISELECT ===== */
+    .multiselect-dropdown {
+      position: relative;
+      width: 100%;
+      margin-bottom: 12px;
+    }
 
-.form-row{display:flex;gap:15px;}
-.form-row > div{flex:1;}
+    .dropdown-toggle {
+      background: white;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
 
-/* Resultados */
-.result{margin-top:20px;}
-.result h3{color:#1a1a2e;margin-bottom:8px;}
-.result-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:14px;
-  column-count:unset;
-}
-.result-table td{
-  padding:3px 8px 3px 0;
-  vertical-align:middle;
-}
-.result-table td.est-nombre{
-  color:#333;
-  font-weight:400;
-  padding-right:16px;
-}
-.result-table td.est-doc{
-  color:#333;
-  font-weight:400;
-  font-size:14px;
-}
+    .dropdown-toggle::after {
+      content: '\25BC';
+      font-size: 10px;
+      color: #666;
+      transition: transform 0.3s;
+    }
 
-/* ===== HORARIO TABLE ===== */
-.horario-section{margin-top:30px;}
-.horario-section h3{text-align:center;color:#1a1a2e;margin-bottom:15px;}
+    .multiselect-dropdown.open .dropdown-toggle::after {
+      transform: rotate(180deg);
+    }
 
-.timetable{
-  width:100%;
-  border-collapse:collapse;
-  table-layout:fixed;
-  font-size:13px;
-}
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      max-height: 250px;
+      overflow-y: auto;
+      z-index: 100;
+      padding: 5px;
+      margin-top: 4px;
+    }
 
-.timetable th{
-  background:#1a1a2e;
-  color:white;
-  padding:10px 6px;
-  text-align:center;
-  font-weight:600;
-  border:1px solid #2a2a4e;
-  position:sticky;top:0;
-}
+    .multiselect-dropdown.open .dropdown-menu {
+      display: block;
+    }
 
-.timetable td{
-  border:1px solid #ddd;
-  height:28px;
-  vertical-align:top;
-  padding:0;
-  position:relative;
-}
+    .dropdown-menu label {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      margin: 0;
+      font-weight: 400;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+    }
 
-.timetable tbody{
-  position:relative;
-}
+    .dropdown-menu label:hover {
+      background: #f0f2f5;
+    }
 
-.timetable td.hora-col{
-  background:#f0f2f5;
-  color:#555;
-  text-align:center;
-  font-weight:500;
-  font-size:11px;
-  vertical-align:middle;
-  width:75px;
-  padding:4px;
-}
+    .dropdown-menu .est-todos-label {
+      border-bottom: 2px solid #ddd;
+      margin-bottom: 4px;
+      padding-bottom: 8px !important;
+      color: #1a1a2e;
+    }
 
-.clase-block{
-  position:absolute;
-  left:2px;right:2px;
-  border-radius:5px;
-  padding:6px;
-  font-size:11px;
-  font-weight:600;
-  color:white;
-  overflow:hidden;
-  z-index:2;
-  box-shadow:0 2px 6px rgba(0,0,0,0.15);
-  line-height:1.3;
-  cursor:default;
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-start;
-  user-select:none;
-}
+    .dropdown-menu .est-todos-label:hover {
+      background: #e8e8ff;
+    }
 
-.clase-block:hover{
-  z-index:10;
-  box-shadow:0 4px 14px rgba(0,0,0,0.35);
-  transform:scale(1.02);
-}
+    .dropdown-menu input[type="checkbox"] {
+      margin-right: 8px;
+      margin-top: 0;
+      cursor: pointer;
+    }
 
-.clase-block .materia-name{
-  white-space:normal;
-  overflow:visible;
-  text-overflow:clip;
-  font-weight:700;
-  line-height:1.2;
-}
+    button {
+      background: linear-gradient(135deg, #3a7afe, #1f5ad6);
+      color: white;
+      font-weight: bold;
+      border: none;
+      padding: 12px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform 0.1s;
+      margin-top: 8px;
+    }
 
-.clase-block .materia-time{
-  font-size:10px;
-  font-weight:400;
-  opacity:0.9;
-  margin-top:2px;
-}
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(58, 122, 254, 0.4);
+    }
 
-.clase-block .codigo-clase{
-  font-size:9px;
-  font-weight:600;
-  opacity:0.95;
-  margin-top:2px;
-  background:rgba(0,0,0,0.2);
-  padding:2px 4px;
-  border-radius:2px;
-  text-align:center;
-  user-select:text;
-  cursor:text;
-  font-family:monospace;
-}
+    .form-row {
+      display: flex;
+      gap: 15px;
+    }
 
-</style>
+    .form-row>div {
+      flex: 1;
+    }
+
+    /* Resultados */
+    .result {
+      margin-top: 20px;
+    }
+
+    .result h3 {
+      color: #1a1a2e;
+      margin-bottom: 8px;
+    }
+
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      column-count: unset;
+    }
+
+    .result-table td {
+      padding: 3px 8px 3px 0;
+      vertical-align: middle;
+    }
+
+    .result-table td.est-nombre {
+      color: #333;
+      font-weight: 400;
+      padding-right: 16px;
+    }
+
+    .result-table td.est-doc {
+      color: #333;
+      font-weight: 400;
+      font-size: 14px;
+    }
+
+    /* ===== HORARIO TABLE ===== */
+    .horario-section {
+      margin-top: 30px;
+    }
+
+    .horario-section h3 {
+      text-align: center;
+      color: #1a1a2e;
+      margin-bottom: 15px;
+    }
+
+    .timetable {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    .timetable th {
+      background: #1a1a2e;
+      color: white;
+      padding: 10px 6px;
+      text-align: center;
+      font-weight: 600;
+      border: 1px solid #2a2a4e;
+      position: sticky;
+      top: 0;
+    }
+
+    .timetable td {
+      border: 1px solid #ddd;
+      height: 28px;
+      vertical-align: top;
+      padding: 0;
+      position: relative;
+    }
+
+    .timetable tbody {
+      position: relative;
+    }
+
+    .timetable td.hora-col {
+      background: #f0f2f5;
+      color: #555;
+      text-align: center;
+      font-weight: 500;
+      font-size: 11px;
+      vertical-align: middle;
+      width: 75px;
+      padding: 4px;
+    }
+
+    .clase-block {
+      position: absolute;
+      left: 2px;
+      right: 2px;
+      border-radius: 5px;
+      padding: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+      overflow: hidden;
+      z-index: 2;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      line-height: 1.3;
+      cursor: default;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      user-select: none;
+    }
+
+    .clase-block:hover {
+      z-index: 10;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      transform: scale(1.02);
+    }
+
+    .clase-block .materia-name {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .clase-block .materia-time {
+      font-size: 10px;
+      font-weight: 400;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .clase-block .codigo-clase {
+      font-size: 9px;
+      font-weight: 600;
+      opacity: 0.95;
+      margin-top: 2px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 2px 4px;
+      border-radius: 2px;
+      text-align: center;
+      user-select: text;
+      cursor: text;
+      font-family: monospace;
+    }
+  </style>
 </head>
 
 <body>
-<div class="container">
+  <div class="container">
 
-<h2>Buscar estudiantes disponibles</h2>
+    <h2>Buscar estudiantes disponibles</h2>
 
-<form method="POST">
+    <form method="POST">
 
-<label>Promoción <small>(selecciona una o varias, o "Todas")</small></label>
-<div class="days-selector" id="promociones-selector">
-  <div class="day-checkbox promo-todas">
-    <input type="checkbox" name="promociones" value="TODAS" id="promo-all" onchange="toggleTodasPromociones()" {% if not sel_promociones %}checked{% endif %}>
-    <label for="promo-all" data-order="" style="background:linear-gradient(135deg,#1a1a2e,#2a2a4e);color:white;border-color:#1a1a2e;">&#9733; Todas</label>
-  </div>
-  {% for promo in promociones %}
-  <div class="day-checkbox">
-    <input type="checkbox" name="promociones" value="{{promo}}" id="promo-{{loop.index}}" {% if promo|string in sel_promociones %}checked{% endif %} onchange="actualizarPromociones()">
-    <label for="promo-{{loop.index}}" data-order="">{{promo}}</label>
-  </div>
-  {% endfor %}
-</div>
+      <label>Promoción <small>(selecciona una o varias, o "Todas")</small></label>
+      <div class="days-selector" id="promociones-selector">
+        <div class="day-checkbox promo-todas">
+          <input type="checkbox" name="promociones" value="TODAS" id="promo-all" onchange="toggleTodasPromociones()" {% if not sel_promociones %}checked{% endif %}>
+          <label for="promo-all" data-order="{% if not sel_promociones %}1{% endif %}"
+            style="background:linear-gradient(135deg,#1a1a2e,#2a2a4e);color:white;border-color:#1a1a2e;">&#9733;
+            Todas</label>
+        </div>
+        {% for promo in promociones %}
+        <div class="day-checkbox">
+          <input type="checkbox" name="promociones" value="{{promo}}" id="promo-{{loop.index}}" {% if promo|string in sel_promociones %}checked{% endif %} onchange="actualizarPromociones()">
+          <label for="promo-{{loop.index}}" data-order="{% if promo|string in sel_promociones %}{{ loop.index }}{% endif %}">{{promo}}</label>
+        </div>
+        {% endfor %}
+      </div>
 
-<label>Estudiante</label>
-<select name="estudiante" id="select-estudiante">
-<option value="">-- Todos --</option>
-{% for est in estudiantes %}
-<option value="{{est}}" {% if est == sel_estudiante %}selected{% endif %}>{{est}}</option>
-{% endfor %}
-</select>
+      <label>Estudiante <small>(selecciona uno o varios, o "Todos")</small></label>
+      <div class="multiselect-dropdown" id="estudiantes-dropdown">
+        <div class="dropdown-toggle" onclick="toggleDropdown()">-- Todos --</div>
+        <div class="dropdown-menu" id="estudiantes-menu">
+          <label class="est-label est-todos-label" onclick="toggleTodosEstudiantes()" style="cursor: pointer; user-select: none; font-weight: 600;">
+            ☐ -- Todos --
+          </label>
+          {% for est in estudiantes %}
+          <label class="est-label"><input type="checkbox" name="estudiante" value="{{est}}" class="est-checkbox"
+              onchange="actualizarSeleccionEstudiantes()" {% if est in sel_estudiante %}checked{% endif %}>
+            {{est}}</label>
+          {% endfor %}
+        </div>
+      </div>
 
-<div class="form-row">
-<div>
-  <label>Días</label>
-  <div class="days-selector" id="days-selector">
-  {% for d in dias %}
-    <div class="day-checkbox">
-      <input type="checkbox" name="dias" value="{{d}}" id="day-{{loop.index}}" {% if d in sel_dias %}checked{% endif %} onchange="actualizarJornadas()">
-      <label for="day-{{loop.index}}" data-order="">{{d}}</label>
-    </div>
-  {% endfor %}
-  </div>
-</div>
-</div>
+      <div class="form-row">
+        <div>
+          <label>Días</label>
+          <div class="days-selector" id="days-selector">
+            {% for d in dias %}
+            <div class="day-checkbox">
+              <input type="checkbox" name="dias" value="{{d}}" id="day-{{loop.index}}" {% if d in sel_dias %}checked{%
+                endif %} onchange="actualizarJornadas()">
+              <label for="day-{{loop.index}}" data-order="">{{d}}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
 
-<div class="jornadas-container" id="jornadas-container"></div>
+      <div class="jornadas-container" id="jornadas-container"></div>
 
-<div class="form-row" id="forma-horarios-defecto" style="display:none;">
-<div>
-  <label>Hora inicio</label>
-  <select name="inicio" id="inicio-default">
-  {% for h in horas %}
-  <option value="{{h}}" {% if h == sel_inicio %}selected{% endif %}>{{h}}</option>
-  {% endfor %}
-  </select>
-</div>
-<div>
-  <label>Hora fin</label>
-  <select name="fin" id="fin-default">
-  {% for h in horas %}
-  <option value="{{h}}" {% if h == sel_fin %}selected{% endif %}>{{h}}</option>
-  {% endfor %}
-  </select>
-</div>
-</div>
+      <div class="form-row" id="forma-horarios-defecto" style="display:none;">
+        <div>
+          <label>Hora inicio</label>
+          <select name="inicio" id="inicio-default">
+            {% for h in horas %}
+            <option value="{{h}}" {% if h==sel_inicio %}selected{% endif %}>{{h}}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Hora fin</label>
+          <select name="fin" id="fin-default">
+            {% for h in horas %}
+            <option value="{{h}}" {% if h==sel_fin %}selected{% endif %}>{{h}}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
 
-<button type="submit">Buscar disponibilidad</button>
+      <button type="submit">Buscar disponibilidad</button>
 
-</form>
+    </form>
 
-<script>
-var horasDisponibles = JSON.parse('{{ horas|tojson|safe }}') || [];
-var diasSeleccionados = JSON.parse('{{ sel_dias|tojson|safe }}') || [];
-var todosEstudiantesPorPromo = {{ todos_por_promo|tojson|safe }};
-var jornadasGuardadas = {};
+    <script>
+      var horasDisponibles = JSON.parse('{{ horas|tojson|safe }}') || [];
+      var diasSeleccionados = JSON.parse('{{ sel_dias|tojson|safe }}') || [];
+      var selEstudiantes = JSON.parse('{{ sel_estudiante|tojson|safe }}') || [];
+      var todosEstudiantesPorPromo = {{ todos_por_promo|tojson|safe }};
+      var jornadasGuardadas = {};
 
-// Recuperar jornadas guardadas del localStorage si existen
-diasSeleccionados.forEach(function(dia) {
-  var inicioKey = 'inicio_' + dia;
-  var finKey = 'fin_' + dia;
-  jornadasGuardadas[inicioKey] = localStorage.getItem(inicioKey) || '';
-  jornadasGuardadas[finKey] = localStorage.getItem(finKey) || '';
-});
+      // Recuperar jornadas guardadas del localStorage si existen
+      diasSeleccionados.forEach(function (dia) {
+        var inicioKey = 'inicio_' + dia;
+        var finKey = 'fin_' + dia;
+        jornadasGuardadas[inicioKey] = localStorage.getItem(inicioKey) || '';
+        jornadasGuardadas[finKey] = localStorage.getItem(finKey) || '';
+      });
 
-// Función para convertir hora a minutos
-function horaAMinutos(hora) {
-  if(!hora) return -Infinity;
-  // Formato: "06:00 AM" o "06:00 PM"
-  var partes = hora.trim().split(' ');
-  var ampm = partes[1]; // "AM" o "PM"
-  var tiempon = partes[0].split(':'); // ["06", "00"]
-  var horas = parseInt(tiempon[0]);
-  var minutos = parseInt(tiempon[1]);
-  
-  if(ampm === 'PM' && horas !== 12) horas += 12;
-  if(ampm === 'AM' && horas === 12) horas = 0;
-  
-  return horas * 60 + minutos;
-}
+      // Función para convertir hora a minutos
+      function horaAMinutos(hora) {
+        if (!hora) return -Infinity;
+        // Formato: "06:00 AM" o "06:00 PM"
+        var partes = hora.trim().split(' ');
+        var ampm = partes[1]; // "AM" o "PM"
+        var tiempon = partes[0].split(':'); // ["06", "00"]
+        var horas = parseInt(tiempon[0]);
+        var minutos = parseInt(tiempon[1]);
 
-// Función para actualizar horas finales disponibles
-function actualizarHorasFin(selectInicio, selectFin, valorFinARestaurar) {
-  var horaInicioSeleccionada = selectInicio.value;
-  // Guardar el valor actual antes de reconstruir las opciones
-  var finPrevio = valorFinARestaurar !== undefined ? valorFinARestaurar : selectFin.value;
+        if (ampm === 'PM' && horas !== 12) horas += 12;
+        if (ampm === 'AM' && horas === 12) horas = 0;
 
-  if(!horaInicioSeleccionada) {
-    // Si no hay hora inicial seleccionada, mostrar todas las horas
-    var optionsHTML = '<option value="">-- Usar por defecto --</option>';
-    horasDisponibles.forEach(function(hora) {
-      var sel = (hora === finPrevio) ? ' selected' : '';
-      optionsHTML += '<option value="' + hora + '"' + sel + '>' + hora + '</option>';
-    });
-    selectFin.innerHTML = optionsHTML;
-    return;
-  }
+        return horas * 60 + minutos;
+      }
 
-  var minutosInicio = horaAMinutos(horaInicioSeleccionada);
+      // Función para actualizar horas finales disponibles
+      function actualizarHorasFin(selectInicio, selectFin, valorFinARestaurar) {
+        var horaInicioSeleccionada = selectInicio.value;
+        // Guardar el valor actual antes de reconstruir las opciones
+        var finPrevio = valorFinARestaurar !== undefined ? valorFinARestaurar : selectFin.value;
 
-  // Generar opciones filtradas para fin (solo horas >= inicio)
-  var optionsHTML = '<option value="">-- Usar por defecto --</option>';
-  horasDisponibles.forEach(function(hora) {
-    var minutosHora = horaAMinutos(hora);
-    if(minutosHora >= minutosInicio) {
-      var sel = (hora === finPrevio) ? ' selected' : '';
-      optionsHTML += '<option value="' + hora + '"' + sel + '>' + hora + '</option>';
-    }
-  });
+        if (!horaInicioSeleccionada) {
+          // Si no hay hora inicial seleccionada, mostrar todas las horas
+          var optionsHTML = '<option value="">-- Usar por defecto --</option>';
+          horasDisponibles.forEach(function (hora) {
+            var sel = (hora === finPrevio) ? ' selected' : '';
+            optionsHTML += '<option value="' + hora + '"' + sel + '>' + hora + '</option>';
+          });
+          selectFin.innerHTML = optionsHTML;
+          return;
+        }
 
-  selectFin.innerHTML = optionsHTML;
+        var minutosInicio = horaAMinutos(horaInicioSeleccionada);
 
-  // Si el valor previo ya no está en las opciones (está antes del inicio), limpiar
-  if(finPrevio && selectFin.value !== finPrevio) {
-    selectFin.value = '';
-  }
-}
+        // Generar opciones filtradas para fin (solo horas >= inicio)
+        var optionsHTML = '<option value="">-- Usar por defecto --</option>';
+        horasDisponibles.forEach(function (hora) {
+          var minutosHora = horaAMinutos(hora);
+          if (minutosHora >= minutosInicio) {
+            var sel = (hora === finPrevio) ? ' selected' : '';
+            optionsHTML += '<option value="' + hora + '"' + sel + '>' + hora + '</option>';
+          }
+        });
 
-function actualizarJornadas() {
-  var checkboxes = document.querySelectorAll('input[name="dias"]:checked');
-  var jornadas = [];
-  var order = 1;
-  
-  // Mostrar/ocultar sección de horarios por defecto según si hay días seleccionados
-  var formaHorarios = document.getElementById('forma-horarios-defecto');
-  if(checkboxes.length > 0) {
-    formaHorarios.style.display = 'none';  // Ocultar cuando hay días seleccionados
-  } else {
-    formaHorarios.style.display = 'flex';  // Mostrar cuando NO hay días seleccionados
-  }
-  
-  // Actualizar números de orden en checkboxes
-  document.querySelectorAll('input[name="dias"]').forEach(function(checkbox) {
-    var label = checkbox.nextElementSibling;
-    if(checkbox.checked) {
-      label.setAttribute('data-order', order);
-      order++;
-    } else {
-      label.setAttribute('data-order', '');
-    }
-  });
-  
-  // Crear HTML de jornadas por cada día seleccionado
-  var html = '';
-  order = 1;
-  checkboxes.forEach(function(checkbox) {
-    var dia = checkbox.value;
-    var inicioKey = 'inicio_' + dia;
-    var finKey = 'fin_' + dia;
-    var inicioGuardado = jornadasGuardadas[inicioKey] || '';
-    var finGuardado = jornadasGuardadas[finKey] || '';
-    
-    html += '<div class="jornada-row">' +
+        selectFin.innerHTML = optionsHTML;
+
+        // Si el valor previo ya no está en las opciones (está antes del inicio), limpiar
+        if (finPrevio && selectFin.value !== finPrevio) {
+          selectFin.value = '';
+        }
+      }
+
+      function actualizarJornadas() {
+        var checkboxes = document.querySelectorAll('input[name="dias"]:checked');
+        var jornadas = [];
+        var order = 1;
+
+        // Mostrar/ocultar sección de horarios por defecto según si hay días seleccionados
+        var formaHorarios = document.getElementById('forma-horarios-defecto');
+        if (checkboxes.length > 0) {
+          formaHorarios.style.display = 'none';  // Ocultar cuando hay días seleccionados
+        } else {
+          formaHorarios.style.display = 'flex';  // Mostrar cuando NO hay días seleccionados
+        }
+
+        // Actualizar números de orden en checkboxes
+        document.querySelectorAll('input[name="dias"]').forEach(function (checkbox) {
+          var label = checkbox.nextElementSibling;
+          if (checkbox.checked) {
+            label.setAttribute('data-order', order);
+            order++;
+          } else {
+            label.setAttribute('data-order', '');
+          }
+        });
+
+        // Crear HTML de jornadas por cada día seleccionado
+        var html = '';
+        order = 1;
+        checkboxes.forEach(function (checkbox) {
+          var dia = checkbox.value;
+          var inicioKey = 'inicio_' + dia;
+          var finKey = 'fin_' + dia;
+          var inicioGuardado = jornadasGuardadas[inicioKey] || '';
+          var finGuardado = jornadasGuardadas[finKey] || '';
+
+          html += '<div class="jornada-row">' +
             '  <div class="jornada-dia"><span class="numero">' + order + '</span>' + dia + '</div>' +
             '  <div>' +
             '    <label style="margin-top:0; margin-bottom:4px; font-size:12px;">Hora inicio</label>' +
             '    <select name="inicio_' + dia + '" class="jornada-select jornada-inicio" data-dia="' + dia + '" onchange="guardarJornada(this); actualizarJornadaFin(this)">' +
             '      <option value="">-- Usar por defecto --</option>';
-    
-    horasDisponibles.forEach(function(hora) {
-      var selected = (inicioGuardado === hora) ? ' selected' : '';
-      html += '<option value="' + hora + '"' + selected + '>' + hora + '</option>';
-    });
-    
-    html += '    </select>' +
+
+          horasDisponibles.forEach(function (hora) {
+            var selected = (inicioGuardado === hora) ? ' selected' : '';
+            html += '<option value="' + hora + '"' + selected + '>' + hora + '</option>';
+          });
+
+          html += '    </select>' +
             '  </div>' +
             '  <div>' +
             '    <label style="margin-top:0; margin-bottom:4px; font-size:12px;">Hora fin</label>' +
             '    <select name="fin_' + dia + '" class="jornada-select jornada-fin" data-dia="' + dia + '" onchange="guardarJornada(this)">' +
             '      <option value="">-- Usar por defecto --</option>';
-    
-    horasDisponibles.forEach(function(hora) {
-      var selected = (finGuardado === hora) ? ' selected' : '';
-      html += '<option value="' + hora + '"' + selected + '>' + hora + '</option>';
-    });
-    
-    html += '    </select>' +
+
+          horasDisponibles.forEach(function (hora) {
+            var selected = (finGuardado === hora) ? ' selected' : '';
+            html += '<option value="' + hora + '"' + selected + '>' + hora + '</option>';
+          });
+
+          html += '    </select>' +
             '  </div>' +
             '</div>';
-    
-    order++;
-  });
-  
-  document.getElementById('jornadas-container').innerHTML = html;
-  
-  // Aplicar estilos a los nuevos selectores
-  var selects = document.querySelectorAll('.jornada-select');
-  selects.forEach(function(select) {
-    select.style.width = '100%';
-    select.style.padding = '8px';
-    select.style.borderRadius = '6px';
-    select.style.border = '1px solid #ccc';
-    select.style.fontSize = '13px';
-  });
-  
-  // Aplicar filtrado inicial a las horas fin, preservando el valor guardado
-  document.querySelectorAll('.jornada-inicio').forEach(function(selectInicio) {
-    var dia = selectInicio.getAttribute('data-dia');
-    var selectFin = document.querySelector('select[name="fin_' + dia + '"]');
-    if(selectFin) {
-      var finGuardado = jornadasGuardadas['fin_' + dia] || '';
-      actualizarHorasFin(selectInicio, selectFin, finGuardado);
-    }
-  });
-}
 
-function actualizarJornadaFin(selectInicio) {
-  var dia = selectInicio.getAttribute('data-dia');
-  var selectFin = document.querySelector('select[name="fin_' + dia + '"]');
-  if(selectFin) {
-    actualizarHorasFin(selectInicio, selectFin);
-  }
-}
+          order++;
+        });
 
-function guardarJornada(select) {
-  localStorage.setItem(select.name, select.value);
-}
+        document.getElementById('jornadas-container').innerHTML = html;
 
-// Inicializar al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-  actualizarJornadas();
-  filtrarEstudiantes(); // Aplicar filtro inicial de estudiantes según promociones pre-seleccionadas
-  
-  // Agregar evento al selector de hora inicio por defecto
-  var selectInicio = document.getElementById('inicio-default');
-  var selectFin = document.getElementById('fin-default');
-  if(selectInicio && selectFin) {
-    selectInicio.addEventListener('change', function() {
-      actualizarHorasFin(selectInicio, selectFin);
-    });
-    // Aplicar filtrado inicial
-    actualizarHorasFin(selectInicio, selectFin);
-  }
-});
+        // Aplicar estilos a los nuevos selectores
+        var selects = document.querySelectorAll('.jornada-select');
+        selects.forEach(function (select) {
+          select.style.width = '100%';
+          select.style.padding = '8px';
+          select.style.borderRadius = '6px';
+          select.style.border = '1px solid #ccc';
+          select.style.fontSize = '13px';
+        });
 
-function filtrarEstudiantes() {
-  var checkboxTodas = document.getElementById('promo-all');
-  var checkboxesIndividuales = document.querySelectorAll('input[name="promociones"]:not(#promo-all):checked');
-  var selectEst = document.getElementById('select-estudiante');
-  var valorActual = selectEst.value; // Conservar selección actual si es posible
-
-  var listaFiltrada = [];
-
-  if (checkboxTodas.checked || checkboxesIndividuales.length === 0) {
-    // Mostrar TODOS los estudiantes de todas las promociones
-    Object.keys(todosEstudiantesPorPromo).forEach(function(promo) {
-      listaFiltrada = listaFiltrada.concat(todosEstudiantesPorPromo[promo]);
-    });
-  } else {
-    // Mostrar solo los estudiantes de las promociones seleccionadas
-    checkboxesIndividuales.forEach(function(cb) {
-      var promo = cb.value;
-      if (todosEstudiantesPorPromo[promo]) {
-        listaFiltrada = listaFiltrada.concat(todosEstudiantesPorPromo[promo]);
+        // Aplicar filtrado inicial a las horas fin, preservando el valor guardado
+        document.querySelectorAll('.jornada-inicio').forEach(function (selectInicio) {
+          var dia = selectInicio.getAttribute('data-dia');
+          var selectFin = document.querySelector('select[name="fin_' + dia + '"]');
+          if (selectFin) {
+            var finGuardado = jornadasGuardadas['fin_' + dia] || '';
+            actualizarHorasFin(selectInicio, selectFin, finGuardado);
+          }
+        });
       }
-    });
-  }
 
-  // Eliminar duplicados y ordenar
-  listaFiltrada = listaFiltrada.filter(function(v, i, a) { return a.indexOf(v) === i; });
-  listaFiltrada.sort();
+      function actualizarJornadaFin(selectInicio) {
+        var dia = selectInicio.getAttribute('data-dia');
+        var selectFin = document.querySelector('select[name="fin_' + dia + '"]');
+        if (selectFin) {
+          actualizarHorasFin(selectInicio, selectFin);
+        }
+      }
 
-  // Reconstruir las opciones del select
-  var html = '<option value="">-- Todos --</option>';
-  listaFiltrada.forEach(function(est) {
-    var sel = (est === valorActual) ? ' selected' : '';
-    html += '<option value="' + est + '"' + sel + '>' + est + '</option>';
-  });
-  selectEst.innerHTML = html;
+      function guardarJornada(select) {
+        localStorage.setItem(select.name, select.value);
+      }
 
-  // Si el estudiante anterior ya no está en la lista, limpiar selección
-  if (valorActual && selectEst.value !== valorActual) {
-    selectEst.value = '';
-  }
-}
+      // Inicializar al cargar la página
+      document.addEventListener('DOMContentLoaded', function () {
+        actualizarJornadas();
+        actualizarPromociones(); // Actualizar órdenes de promociones en la inicialización
+        filtrarEstudiantes(true); // Aplicar filtro inicial de estudiantes según promociones pre-seleccionadas
 
-function toggleTodasPromociones() {
-  var checkboxTodas = document.getElementById('promo-all');
-  var checkboxesPromociones = document.querySelectorAll('input[name="promociones"]:not(#promo-all)');
-  
-  if (checkboxTodas.checked) {
-    // Al marcar "Todas": desmarcar las individuales
-    checkboxesPromociones.forEach(function(checkbox) {
-      checkbox.checked = false;
-      var label = checkbox.nextElementSibling;
-      label.setAttribute('data-order', '');
-    });
-  }
-  // Actualizar el dropdown de estudiantes inmediatamente
-  filtrarEstudiantes();
-}
+        // Agregar evento al selector de hora inicio por defecto
+        var selectInicio = document.getElementById('inicio-default');
+        var selectFin = document.getElementById('fin-default');
+        if (selectInicio && selectFin) {
+          selectInicio.addEventListener('change', function () {
+            actualizarHorasFin(selectInicio, selectFin);
+          });
+          // Aplicar filtrado inicial
+          actualizarHorasFin(selectInicio, selectFin);
+        }
+      });
 
-function actualizarPromociones() {
-  var checkboxTodas = document.getElementById('promo-all');
-  var checkboxesPromociones = document.querySelectorAll('input[name="promociones"]:not(#promo-all)');
-  var algunaSeleccionada = Array.from(checkboxesPromociones).some(function(cb) { return cb.checked; });
-  
-  if (algunaSeleccionada) {
-    // Hay individuales seleccionadas: desmarcar "Todas"
-    checkboxTodas.checked = false;
-  } else {
-    // No hay ninguna individual: auto-marcar "Todas"
-    checkboxTodas.checked = true;
-  }
-  
-  // Actualizar números de orden en checkboxes individuales
-  var order = 1;
-  checkboxesPromociones.forEach(function(checkbox) {
-    var label = checkbox.nextElementSibling;
-    if (checkbox.checked) {
-      label.setAttribute('data-order', order);
-      order++;
-    } else {
-      label.setAttribute('data-order', '');
-    }
-  });
+      function toggleDropdown() {
+        document.getElementById('estudiantes-dropdown').classList.toggle('open');
+      }
 
-  // Actualizar el dropdown de estudiantes inmediatamente
-  filtrarEstudiantes();
-}
-</script>
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function (event) {
+        var dropdown = document.getElementById('estudiantes-dropdown');
+        if (dropdown && !dropdown.contains(event.target)) {
+          dropdown.classList.remove('open');
+        }
+      });
+
+      function toggleTodosEstudiantes() {
+        var checkboxes = document.querySelectorAll('.est-checkbox');
+        var algunaSeleccionada = Array.from(checkboxes).some(function (cb) { return cb.checked; });
+        
+        // Si alguna está seleccionada, desmarcar todas; si ninguna, marcar todas
+        checkboxes.forEach(function (cb) {
+          cb.checked = !algunaSeleccionada;
+        });
+        
+        actualizarTextoDropdown();
+      }
+
+      function actualizarSeleccionEstudiantes() {
+        var checkboxes = document.querySelectorAll('.est-checkbox');
+        var algunaSeleccionada = Array.from(checkboxes).some(function (cb) { return cb.checked; });
+        
+        // Solo actualizar el display
+        actualizarTextoDropdown();
+      }
+
+      function actualizarTextoDropdown() {
+        var toggleDeTexto = document.querySelector('.dropdown-toggle');
+        if (!toggleDeTexto) return;
+        
+        var seleccionados = Array.from(document.querySelectorAll('.est-checkbox:checked')).map(function (cb) {
+          return cb.value;
+        });
+        
+        if (seleccionados.length === 0) {
+          toggleDeTexto.textContent = '-- Todos --';
+        } else if (seleccionados.length === 1) {
+          toggleDeTexto.textContent = seleccionados[0];
+        } else {
+          toggleDeTexto.textContent = seleccionados.length + ' estudiantes seleccionados';
+        }
+      }
+
+      function filtrarEstudiantes(isInitial) {
+        var checkboxTodas = document.getElementById('promo-all');
+        var checkboxesIndividuales = document.querySelectorAll('input[name="promociones"]:not(#promo-all):checked');
+        var menuEst = document.getElementById('estudiantes-menu');
+
+        // Conservar las selecciones solo si es la inicialización
+        var seleccionesPrevias;
+
+        if (isInitial === true) {
+          seleccionesPrevias = selEstudiantes;
+        } else {
+          // Si no es inicialización, marcar TODOS los estudiantes de las promociones filtradas
+          seleccionesPrevias = [];
+        }
+
+        var listaFiltrada = [];
+
+        if (checkboxTodas.checked || checkboxesIndividuales.length === 0) {
+          // Mostrar TODOS los estudiantes de todas las promociones
+          Object.keys(todosEstudiantesPorPromo).forEach(function (promo) {
+            listaFiltrada = listaFiltrada.concat(todosEstudiantesPorPromo[promo]);
+          });
+        } else {
+          // Mostrar solo los estudiantes de las promociones seleccionadas
+          checkboxesIndividuales.forEach(function (cb) {
+            var promo = cb.value;
+            if (todosEstudiantesPorPromo[promo]) {
+              listaFiltrada = listaFiltrada.concat(todosEstudiantesPorPromo[promo]);
+            }
+          });
+        }
+
+        // Eliminar duplicados y ordenar
+        listaFiltrada = listaFiltrada.filter(function (v, i, a) { return a.indexOf(v) === i; });
+        listaFiltrada.sort();
+
+        // Reconstruir opciones con "-- Todos --" sin checkbox
+        var html = '<label class="est-label est-todos-label" onclick="toggleTodosEstudiantes()" style="cursor: pointer; user-select: none; font-weight: 600;">☐ -- Todos --</label>';
+        listaFiltrada.forEach(function (est) {
+          // Si no es inicialización, marcar todos los estudiantes; si es inicialización, mantener selecciones previas
+          var isChecked = (!isInitial) ? 'checked' : (seleccionesPrevias.indexOf(est) !== -1 ? 'checked' : '');
+          html += '<label class="est-label"><input type="checkbox" name="estudiante" value="' + est + '" class="est-checkbox" onchange="actualizarSeleccionEstudiantes()" ' + isChecked + '> ' + est + '</label>';
+        });
+        menuEst.innerHTML = html;
+
+        actualizarTextoDropdown();
+      }
+
+      function toggleTodasPromociones() {
+        var checkboxTodas = document.getElementById('promo-all');
+        var checkboxesPromociones = document.querySelectorAll('input[name="promociones"]:not(#promo-all)');
+        var labelTodas = checkboxTodas.nextElementSibling;
+
+        if (checkboxTodas.checked) {
+          // Al marcar "Todas": desmarcar las individuales
+          checkboxesPromociones.forEach(function (checkbox) {
+            checkbox.checked = false;
+            var label = checkbox.nextElementSibling;
+            label.setAttribute('data-order', '');
+          });
+          // Actualizar orden de "TODAS"
+          labelTodas.setAttribute('data-order', '1');
+        }
+        // Actualizar el dropdown de estudiantes inmediatamente
+        filtrarEstudiantes();
+      }
+
+      function actualizarPromociones() {
+        var checkboxTodas = document.getElementById('promo-all');
+        var checkboxesPromociones = document.querySelectorAll('input[name="promociones"]:not(#promo-all)');
+        var labelTodas = checkboxTodas.nextElementSibling;
+        var algunaSeleccionada = Array.from(checkboxesPromociones).some(function (cb) { return cb.checked; });
+
+        if (algunaSeleccionada) {
+          // Hay individuales seleccionadas: desmarcar "Todas"
+          checkboxTodas.checked = false;
+          labelTodas.setAttribute('data-order', '');
+        } else {
+          // No hay ninguna individual: auto-marcar "Todas"
+          checkboxTodas.checked = true;
+          labelTodas.setAttribute('data-order', '1');
+        }
+
+        // Actualizar números de orden en checkboxes individuales
+        var order = 1;
+        checkboxesPromociones.forEach(function (checkbox) {
+          var label = checkbox.nextElementSibling;
+          if (checkbox.checked) {
+            label.setAttribute('data-order', order);
+            order++;
+          } else {
+            label.setAttribute('data-order', '');
+          }
+        });
+
+        // Actualizar el dropdown de estudiantes inmediatamente
+        filtrarEstudiantes();
+      }
+    </script>
 
 
-{% if disponibles %}
-<div class="result">
-<h3>Estudiantes disponibles ({{disponibles|length}})</h3>
-<table class="result-table">
-{% for est in disponibles %}
-<tr><td class="est-nombre">{{est}}</td><td class="est-doc">{{disponibles_info[est]}}</td></tr>
-{% endfor %}
-</table>
-</div>
-{% endif %}
+    {% if disponibles %}
+    <div class="result">
+      <h3>Estudiantes disponibles ({{disponibles|length}})</h3>
+      <table class="result-table">
+        {% for est in disponibles %}
+        <tr>
+          <td class="est-nombre">{{est}}</td>
+          <td class="est-doc">{{disponibles_info[est]}}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    {% endif %}
 
 
-{% if horario %}
-<div class="horario-section">
-<h3>Horario semanal — {{sel_estudiante}}</h3>
+    {% if horario %}
+    <div class="horario-section">
+      <h3>Horario semanal{% if sel_estudiante %} — {{sel_estudiante | join(', ') | truncate(60)}}{% else %} — Todos{%
+        endif %}</h3>
 
-<script id="horario-data" type="application/json">{{ horario|tojson }}</script>
-<script id="dias-data" type="application/json">{{ dias_semana|tojson }}</script>
+      <script id="horario-data" type="application/json">{{ horario|tojson }}</script>
+      <script id="dias-data" type="application/json">{{ dias_semana|tojson }}</script>
 
-<div id="timetable-container" style="overflow-x:auto;"></div>
-</div>
-{% endif %}
+      <div id="timetable-container" style="overflow-x:auto;"></div>
+    </div>
+    {% endif %}
 
-</div>
+  </div>
 
-<script>
-(function(){
-  var dataEl = document.getElementById('horario-data');
-  var diasEl = document.getElementById('dias-data');
-  if(!dataEl || !diasEl) return;
+  <script>
+    (function () {
+      var dataEl = document.getElementById('horario-data');
+      var diasEl = document.getElementById('dias-data');
+      if (!dataEl || !diasEl) return;
 
-  var horario = JSON.parse(dataEl.textContent);
-  var diasSemana = JSON.parse(diasEl.textContent);
-  if(!horario.length) return;
+      var horario = JSON.parse(dataEl.textContent);
+      var diasSemana = JSON.parse(diasEl.textContent);
+      if (!horario.length) return;
 
-  // Find time range from data
-  var allStart = [], allEnd = [];
-  horario.forEach(function(c){
-    allStart.push(toMin(c.inicio));
-    allEnd.push(toMin(c.fin));
-  });
-  var minMin = Math.min.apply(null, allStart);
-  var maxMin = Math.max.apply(null, allEnd);
+      // Find time range from data
+      var allStart = [], allEnd = [];
+      horario.forEach(function (c) {
+        allStart.push(toMin(c.inicio));
+        allEnd.push(toMin(c.fin));
+      });
+      var minMin = Math.min.apply(null, allStart);
+      var maxMin = Math.max.apply(null, allEnd);
 
-  // Round to nearest 30 min
-  var slotStart = Math.floor(minMin / 30) * 30;
-  var slotEnd = Math.ceil(maxMin / 30) * 30;
+      // Round to nearest 30 min
+      var slotStart = Math.floor(minMin / 30) * 30;
+      var slotEnd = Math.ceil(maxMin / 30) * 30;
 
-  // Build slots (each 30 min)
-  var slots = [];
-  for(var m = slotStart; m < slotEnd; m += 30){
-    slots.push(m);
-  }
+      // Build slots (each 30 min)
+      var slots = [];
+      for (var m = slotStart; m < slotEnd; m += 30) {
+        slots.push(m);
+      }
 
-  var ROW_H = 28; // px per 30-min slot
+      var ROW_H = 28; // px per 30-min slot
 
-  // Build <table>
-  var html = '<table class="timetable"><thead><tr><th>HORAS</th>';
-  diasSemana.forEach(function(d){ html += '<th>'+d+'</th>'; });
-  html += '</tr></thead><tbody>';
+      // Build <table>
+      var html = '<table class="timetable"><thead><tr><th>HORAS</th>';
+      diasSemana.forEach(function (d) { html += '<th>' + d + '</th>'; });
+      html += '</tr></thead><tbody>';
 
-  slots.forEach(function(slotMin){
-    html += '<tr>';
-    html += '<td class="hora-col">'+formatMin(slotMin)+'</td>';
-    diasSemana.forEach(function(d){
-      html += '<td></td>';
-    });
-    html += '</tr>';
-  });
+      slots.forEach(function (slotMin) {
+        html += '<tr>';
+        html += '<td class="hora-col">' + formatMin(slotMin) + '</td>';
+        diasSemana.forEach(function (d) {
+          html += '<td></td>';
+        });
+        html += '</tr>';
+      });
 
-  html += '</tbody></table>';
+      html += '</tbody></table>';
 
-  var container = document.getElementById('timetable-container');
-  container.innerHTML = html;
+      var container = document.getElementById('timetable-container');
+      container.innerHTML = html;
 
-  var table = container.querySelector('table');
-  var tbody = table.querySelector('tbody');
-  var rows = tbody.querySelectorAll('tr');
+      var table = container.querySelector('table');
+      var tbody = table.querySelector('tbody');
+      var rows = tbody.querySelectorAll('tr');
 
-  // Place class blocks as absolutely positioned divs inside tbody
-  horario.forEach(function(clase){
-    var colIdx = diasSemana.indexOf(clase.dia);
-    if(colIdx === -1) return;
+      // Place class blocks as absolutely positioned divs inside tbody
+      horario.forEach(function (clase) {
+        var colIdx = diasSemana.indexOf(clase.dia);
+        if (colIdx === -1) return;
 
-    var startMin = toMin(clase.inicio);
-    var endMin = toMin(clase.fin);
+        var startMin = toMin(clase.inicio);
+        var endMin = toMin(clase.fin);
 
-    var startSlotIdx = Math.floor((startMin - slotStart) / 30);
-    var spanSlots = Math.ceil((endMin - startMin) / 30);
+        var startSlotIdx = Math.floor((startMin - slotStart) / 30);
+        var spanSlots = Math.ceil((endMin - startMin) / 30);
 
-    if(startSlotIdx < 0 || startSlotIdx >= slots.length) return;
+        if (startSlotIdx < 0 || startSlotIdx >= slots.length) return;
 
-    // Calculate positioning within tbody
-    var topOffset = startSlotIdx * ROW_H; // In pixels from top of tbody
-    var blockHeight = Math.max(spanSlots * ROW_H, 40); // Minimum height for readability
+        // Calculate positioning within tbody
+        var topOffset = startSlotIdx * ROW_H; // In pixels from top of tbody
+        var blockHeight = Math.max(spanSlots * ROW_H, 40); // Minimum height for readability
 
-    // Get column widths from the first row
-    var firstRowTds = rows[0].querySelectorAll('td');
-    var horaColWidth = firstRowTds[0].offsetWidth;
-    var dataColWidth = firstRowTds[colIdx + 1].offsetWidth;
-    
-    // Calculate left position (accounting for hora column)
-    var leftOffset = 0;
-    for(var i = 0; i <= colIdx; i++){
-      if(i === 0) leftOffset += horaColWidth;
-      else leftOffset += dataColWidth;
-    }
+        // Get column widths from the first row
+        var firstRowTds = rows[0].querySelectorAll('td');
+        var horaColWidth = firstRowTds[0].offsetWidth;
+        var dataColWidth = firstRowTds[colIdx + 1].offsetWidth;
 
-    var block = document.createElement('div');
-    block.className = 'clase-block';
-    block.style.background = clase.color;
-    block.style.height = blockHeight + 'px';
-    block.style.top = topOffset + 'px';
-    block.style.left = leftOffset + 'px';
-    block.style.width = (dataColWidth - 4) + 'px';
-    block.title = clase.materia + '\n' + formatMin(startMin) + ' - ' + formatMin(endMin);
+        // Calculate left position (accounting for hora column)
+        var leftOffset = 0;
+        for (var i = 0; i <= colIdx; i++) {
+          if (i === 0) leftOffset += horaColWidth;
+          else leftOffset += dataColWidth;
+        }
 
-    block.innerHTML = '<div class="materia-name">' + clase.materia + '</div>'
-                    + '<div class="materia-time">' + formatMin(startMin) + ' - ' + formatMin(endMin) + '</div>'
-                    + '<div class="codigo-clase">' + clase.codigo + '</div>';
+        var block = document.createElement('div');
+        block.className = 'clase-block';
+        block.style.background = clase.color;
+        block.style.height = blockHeight + 'px';
+        block.style.top = topOffset + 'px';
+        block.style.left = leftOffset + 'px';
+        block.style.width = (dataColWidth - 4) + 'px';
+        block.title = clase.materia + '\n' + formatMin(startMin) + ' - ' + formatMin(endMin);
 
-    tbody.appendChild(block);
-  });
+        block.innerHTML = '<div class="materia-name">' + clase.materia + '</div>'
+          + '<div class="materia-time">' + formatMin(startMin) + ' - ' + formatMin(endMin) + '</div>'
+          + '<div class="codigo-clase">' + clase.codigo + '</div>';
 
-  function toMin(hhmm){
-    var p = hhmm.split(':');
-    return parseInt(p[0])*60 + parseInt(p[1]);
-  }
+        tbody.appendChild(block);
+      });
 
-  function formatMin(m){
-    var hh = Math.floor(m/60);
-    var mm = m % 60;
-    var ampm = hh >= 12 ? 'pm' : 'am';
-    if(hh === 0) hh = 12;
-    else if(hh > 12) hh -= 12;
-    return hh + ':' + (mm < 10 ? '0'+mm : mm) + ' ' + ampm;
-  }
-})();
-</script>
+      function toMin(hhmm) {
+        var p = hhmm.split(':');
+        return parseInt(p[0]) * 60 + parseInt(p[1]);
+      }
+
+      function formatMin(m) {
+        var hh = Math.floor(m / 60);
+        var mm = m % 60;
+        var ampm = hh >= 12 ? 'pm' : 'am';
+        if (hh === 0) hh = 12;
+        else if (hh > 12) hh -= 12;
+        return hh + ':' + (mm < 10 ? '0' + mm : mm) + ' ' + ampm;
+      }
+    })();
+  </script>
 
 </body>
+
 </html>

@@ -55,7 +55,7 @@ def cargar():
     return df
 
 
-def buscar_disponibles(df, dias, inicio, fin, estudiante):
+def buscar_disponibles(df, dias, inicio, fin, estudiantes_seleccionados):
 
     inicio = convertir_24(inicio)
     fin = convertir_24(fin)
@@ -66,8 +66,8 @@ def buscar_disponibles(df, dias, inicio, fin, estudiante):
     if fin is None:
         fin = "22:00"
 
-    if estudiante != "":
-        df = df[df["Nombre_Estudiante"].str.contains(estudiante, case=False)]
+    if estudiantes_seleccionados:
+        df = df[df["Nombre_Estudiante"].isin(estudiantes_seleccionados)]
 
     todos = set(df["Nombre_Estudiante"])
 
@@ -123,7 +123,7 @@ def index():
     disponibles = []
     disponibles_info = {}  # {nombre: id_documento}
     horario = []
-    sel_estudiante = ""
+    sel_estudiante = []
     sel_dias = []
     sel_inicio = ""
     sel_fin = ""
@@ -141,7 +141,12 @@ def index():
         sel_dias = request.form.getlist("dias")  # Obtener lista de días
         sel_inicio = request.form["inicio"]
         sel_fin = request.form["fin"]
-        sel_estudiante = request.form["estudiante"]
+        
+        sel_estudiante_raw = request.form.getlist("estudiante")
+        if "TODOS" in sel_estudiante_raw or not sel_estudiante_raw:
+            sel_estudiante = []
+        else:
+            sel_estudiante = [e for e in sel_estudiante_raw if e and e != "TODOS"]
 
         # Filtrar por promociones (si hay seleccionadas y NO es "Todas")
         if sel_promociones and not todas_seleccionadas:
@@ -177,7 +182,7 @@ def index():
         disponibles_info = {nombre: info_map.get(nombre, "") for nombre in disponibles}
 
         if sel_estudiante:
-            clases = df_filtered[df_filtered["Nombre_Estudiante"] == sel_estudiante]
+            clases = df_filtered[df_filtered["Nombre_Estudiante"].isin(sel_estudiante)]
             materias_unicas = clases["Materia"].unique().tolist()
             color_map = {m: COLORES[i % len(COLORES)] for i, m in enumerate(materias_unicas)}
 
@@ -189,11 +194,16 @@ def index():
                     codigo = str(int(row["Codigo_Clase"]))
                 except (ValueError, TypeError):
                     codigo = str(row["Codigo_Clase"]) if pd.notna(row["Codigo_Clase"]) else "--"
+                
+                nom_comp = str(row["Nombre_Estudiante"]).split()
+                nombre_corto = nom_comp[0] if nom_comp else ""
+                sufijo_nombre = f" ({nombre_corto})" if len(sel_estudiante) > 1 else ""
+                
                 horario.append({
                     "dia": row["Dia"],
-                    "inicio": row["Hora_Inicio"],
+                        "inicio": row["Hora_Inicio"],
                     "fin": row["Hora_Fin"],
-                    "materia": str(row["Materia"]),
+                    "materia": str(row["Materia"]) + sufijo_nombre,
                     "codigo": codigo,
                     "color": color_map.get(row["Materia"], "#3a7afe"),
                 })
