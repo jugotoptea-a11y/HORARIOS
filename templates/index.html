@@ -491,6 +491,58 @@
     button.btn-antidisponibilidad:hover {
       box-shadow: 0 4px 12px rgba(232, 93, 117, 0.4);
     }
+    /* ===== MODAL POPUP ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 14px;
+    }
+    .modal {
+      background: white;
+      border-radius: 10px;
+      max-width: 820px;
+      width: 100%;
+      max-height: 75vh;
+      overflow: auto;
+      padding: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: transparent;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .modal-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+    }
+    .modal-table th, .modal-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #f1f1f1;
+      text-align: left;
+      font-size: 13px;
+    }
+    .modal-empty {
+      padding: 10px;
+      color: #666;
+    }
+    /* Compactar estilos del timetable dentro del modal */
+    .modal .timetable { font-size: 12px; }
+    .modal .timetable th { padding: 8px 6px; }
+    .modal .timetable td { height: 22px; }
+    .modal .hora-col { width: 60px; font-size: 11px; }
+    .modal .clase-block { padding: 6px 6px; font-size: 11px; border-radius: 4px; }
   </style>
 </head>
 
@@ -1088,6 +1140,181 @@
         return hh + ':' + (mm < 10 ? '0' + mm : mm) + ' ' + ampm;
       }
     })();
+  </script>
+
+  <!-- Modal para mostrar horario completo de un estudiante -->
+  <div id="modal-overlay" class="modal-overlay" role="dialog" aria-hidden="true">
+    <div class="modal" role="document" aria-labelledby="modal-title">
+      <button class="modal-close" aria-label="Cerrar" onclick="closeModal()">×</button>
+      <h3 id="modal-title"></h3>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <script>
+    // Manejo del popup de horario
+    function attachResultClickHandlers() {
+      var rows = document.querySelectorAll('.result-table tr');
+      rows.forEach(function (row) {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', function () {
+          var nombreEl = this.querySelector('.est-nombre');
+          if (!nombreEl) return;
+          var nombre = nombreEl.textContent.trim();
+          abrirHorarioPopup(nombre);
+        });
+      });
+    }
+
+    function abrirHorarioPopup(nombre) {
+      var overlay = document.getElementById('modal-overlay');
+      var title = document.getElementById('modal-title');
+      var content = document.getElementById('modal-content');
+      title.textContent = 'Horario de ' + nombre;
+      content.innerHTML = '<p class="modal-empty">Cargando...</p>';
+      overlay.style.display = 'flex';
+
+      fetch('/api/horario?nombre=' + encodeURIComponent(nombre))
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (!Array.isArray(data) || data.length === 0) {
+            content.innerHTML = '<p class="modal-empty">No hay horario disponible para ' + nombre + '.</p>';
+            return;
+          }
+          renderModalTimetable(content, data);
+        })
+        .catch(function (err) {
+            console.error(err);
+            content.innerHTML = '<p class="modal-empty">Error al cargar el horario.</p>';
+          });
+      }
+
+      function renderModalTimetable(container, data) {
+        // Mostrar un timetable visual parecido al principal dentro del modal
+        var diasSemana = ['LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'];
+
+        // Mostrar siempre la semana completa (LUNES-SABADO)
+        var diasToShow = diasSemana.slice();
+
+        // Calcular rango de horas
+        var allStart = data.map(function (c) { return toMin24(c.inicio); });
+        var allEnd = data.map(function (c) { return toMin24(c.fin); });
+        var minMin = Math.min.apply(null, allStart);
+        var maxMin = Math.max.apply(null, allEnd);
+        var slotStart = Math.floor(minMin / 30) * 30;
+        var slotEnd = Math.ceil(maxMin / 30) * 30;
+        if (slotEnd <= slotStart) slotEnd = slotStart + 30;
+
+        // Build slots
+        var slots = [];
+        for (var m = slotStart; m < slotEnd; m += 30) slots.push(m);
+
+        var ROW_H = 22;
+
+        // Construir tabla
+        var html = '<table class="timetable"><thead><tr><th>HORAS</th>';
+        diasToShow.forEach(function (d) { html += '<th>' + d + '</th>'; });
+        html += '</tr></thead><tbody>';
+
+        slots.forEach(function (slotMin) {
+          html += '<tr>';
+          html += '<td class="hora-col">' + formatMin(slotMin) + '</td>';
+          diasToShow.forEach(function (d) { html += '<td></td>'; });
+          html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+        var table = container.querySelector('table');
+        var tbody = table.querySelector('tbody');
+        var rows = tbody.querySelectorAll('tr');
+
+        // Añadir bloques
+        data.forEach(function (clase) {
+          var colIdx = diasToShow.indexOf(clase.dia);
+          if (colIdx === -1) return;
+
+          var startMin = toMin24(clase.inicio);
+          var endMin = toMin24(clase.fin);
+
+          var startSlotIdx = Math.floor((startMin - slotStart) / 30);
+          var spanSlots = Math.ceil((endMin - startMin) / 30);
+
+          if (startSlotIdx < 0 || startSlotIdx >= slots.length) return;
+
+          var topOffset = startSlotIdx * ROW_H;
+          var blockHeight = Math.max(spanSlots * ROW_H, 40);
+
+          var firstRowTds = rows[0].querySelectorAll('td');
+          var horaColWidth = firstRowTds[0].offsetWidth;
+          var dataColWidth = firstRowTds[colIdx + 1].offsetWidth;
+
+          var leftOffset = 0;
+          for (var i = 0; i <= colIdx; i++) {
+            if (i === 0) leftOffset += horaColWidth;
+            else leftOffset += dataColWidth;
+          }
+
+          var block = document.createElement('div');
+          block.className = 'clase-block';
+          block.style.background = clase.color || '#3a7afe';
+          block.style.height = blockHeight + 'px';
+          block.style.top = topOffset + 'px';
+          block.style.left = leftOffset + 'px';
+          block.style.width = (dataColWidth - 4) + 'px';
+          block.title = clase.materia + '\n' + formatMin(startMin) + ' - ' + formatMin(endMin);
+
+          block.innerHTML = '<div class="materia-name">' + clase.materia + '</div>'
+            + '<div class="materia-time">' + formatMin(startMin) + ' - ' + formatMin(endMin) + '</div>'
+            + '<div class="codigo-clase">' + clase.codigo + '</div>';
+
+          tbody.appendChild(block);
+        });
+
+        function toMin24(hhmm) {
+          if (!hhmm) return 0;
+          var p = hhmm.split(':');
+          return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
+        }
+
+        function formatMin(m) {
+          var hh = Math.floor(m / 60);
+          var mm = m % 60;
+          var ampm = hh >= 12 ? 'pm' : 'am';
+          if (hh === 0) hh = 12;
+          else if (hh > 12) hh -= 12;
+          return hh + ':' + (mm < 10 ? '0' + mm : mm) + ' ' + ampm;
+        }
+      }
+
+    function format24To12(hhmm) {
+      if (!hhmm) return '';
+      var p = hhmm.split(':');
+      var hh = parseInt(p[0], 10);
+      var mm = p[1];
+      var ampm = hh >= 12 ? 'PM' : 'AM';
+      if (hh === 0) hh = 12;
+      else if (hh > 12) hh -= 12;
+      return hh + ':' + (mm || '00') + ' ' + ampm;
+    }
+
+    function closeModal() {
+      var overlay = document.getElementById('modal-overlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    // Cerrar modal clicando fuera
+    document.addEventListener('click', function (e) {
+      var overlay = document.getElementById('modal-overlay');
+      if (!overlay) return;
+      if (e.target === overlay) closeModal();
+    });
+
+    // Adjuntar handlers al cargar
+    document.addEventListener('DOMContentLoaded', function () {
+      attachResultClickHandlers();
+    });
   </script>
 
 </body>

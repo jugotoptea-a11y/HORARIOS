@@ -1,12 +1,18 @@
 import os
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
 from datetime import datetime, timedelta
+from threading import Lock
 
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ruta_csv = os.path.join(BASE_DIR, "horarios_extraidos.csv")
+
+# Cache para evitar recargar CSV en cada petición
+_cached_df = None
+_cached_mtime = None
+_cache_lock = Lock()
 
 
 def generar_horas():
@@ -23,63 +29,94 @@ def generar_horas():
 
     return horas
 
+# Generar horas una vez (constante)
+HORAS = generar_horas()
+
 
 def convertir_24(hora):
-    # Si la hora está vacía, retornar None para manejarlo después
-    if not hora or not hora.strip():
+    """Convierte una hora en formato 12h o 24h a minutos desde medianoche (int).
+    Retorna None si no se puede parsear.
+    """
+    if not hora or not str(hora).strip():
         return None
-    
-    return datetime.strptime(hora.strip().upper(), "%I:%M %p").strftime("%H:%M")
+    s = str(hora).strip().upper()
+    # Intentar formatos comunes: '6:00 AM' o '06:00'
+    try:
+        dt = datetime.strptime(s, "%I:%M %p")
+    except Exception:
+        try:
+            dt = datetime.strptime(s, "%H:%M")
+        except Exception:
+            return None
+    return dt.hour * 60 + dt.minute
 
 
 def cargar():
 
-    df = pd.read_csv(ruta_csv, encoding="utf-8-sig")
+    global _cached_df, _cached_mtime
+    try:
+        mtime = os.path.getmtime(ruta_csv)
+    except OSError:
+        # Archivo no encontrado; devolver DataFrame vacío
+        return pd.DataFrame()
 
-    df["Hora_Inicio"] = pd.to_datetime(
-        df["Hora_Inicio"].astype(str).str.strip().str.upper(),
-        format="%I:%M %p", errors="coerce"
-    ).dt.strftime("%H:%M")
+    with _cache_lock:
+        if _cached_df is not None and _cached_mtime == mtime:
+            return _cached_df
 
-    df["Hora_Fin"] = pd.to_datetime(
-        df["Hora_Fin"].astype(str).str.strip().str.upper(),
-        format="%I:%M %p", errors="coerce"
-    ).dt.strftime("%H:%M")
+        df = pd.read_csv(ruta_csv, encoding="utf-8-sig")
 
-    # Marcar filas con horas inválidas pero NO eliminarlas,
-    # para que los estudiantes sigan apareciendo en el dropdown
-    df["_horas_validas"] = df["Hora_Inicio"].notna() & df["Hora_Fin"].notna()
+        # Normalizar y parsear horas (vectorizado)
+        inicio_dt = pd.to_datetime(
+            df.get("Hora_Inicio", "").astype(str).str.strip().str.upper(),
+            format="%I:%M %p", errors="coerce"
+        )
+        fin_dt = pd.to_datetime(
+            df.get("Hora_Fin", "").astype(str).str.strip().str.upper(),
+            format="%I:%M %p", errors="coerce"
+        )
 
-    df["Dia"] = df["Dia"].astype(str).str.strip().str.upper()
+        df["_horas_validas"] = inicio_dt.notna() & fin_dt.notna()
 
-    return df
+        # Mantener columnas legibles para la UI y añadir columnas numéricas para comparar
+        df["Hora_Inicio"] = inicio_dt.dt.strftime("%H:%M")
+        df["Hora_Fin"] = fin_dt.dt.strftime("%H:%M")
+
+        df["Hora_Inicio_min"] = (inicio_dt.dt.hour * 60 + inicio_dt.dt.minute)
+        df["Hora_Fin_min"] = (fin_dt.dt.hour * 60 + fin_dt.dt.minute)
+
+        df["Dia"] = df.get("Dia", "").astype(str).str.strip().str.upper()
+
+        _cached_df = df
+        _cached_mtime = mtime
+
+        return _cached_df
 
 
 def buscar_disponibles(df, dias, inicio, fin, estudiantes_seleccionados):
+    inicio_min = convertir_24(inicio)
+    fin_min = convertir_24(fin)
 
-    inicio = convertir_24(inicio)
-    fin = convertir_24(fin)
-    
-    # Si no hay hora inicio/fin, usar valores por defecto
-    if inicio is None:
-        inicio = "06:00"
-    if fin is None:
-        fin = "22:00"
+    # Si no hay hora inicio/fin, usar valores por defecto (en minutos)
+    if inicio_min is None:
+        inicio_min = 6 * 60
+    if fin_min is None:
+        fin_min = 22 * 60
 
     if estudiantes_seleccionados:
         df = df[df["Nombre_Estudiante"].isin(estudiantes_seleccionados)]
 
-    todos = set(df["Nombre_Estudiante"])
+    todos = set(df["Nombre_Estudiante"].dropna())
 
     # Solo usar filas con horas válidas para determinar quién está ocupado
     df_valido = df[df["_horas_validas"] == True]
 
     ocupados = df_valido[
         (df_valido["Dia"].isin(dias)) &
-        ~((df_valido["Hora_Fin"] <= inicio) | (df_valido["Hora_Inicio"] >= fin))
+        ~((df_valido["Hora_Fin_min"] <= inicio_min) | (df_valido["Hora_Inicio_min"] >= fin_min))
     ]
 
-    ocupados_set = set(ocupados["Nombre_Estudiante"])
+    ocupados_set = set(ocupados["Nombre_Estudiante"].dropna())
 
     libres = sorted(todos - ocupados_set)
 
@@ -89,13 +126,13 @@ def buscar_disponibles(df, dias, inicio, fin, estudiantes_seleccionados):
 def buscar_no_disponibles(df, dias, inicio, fin, estudiantes_seleccionados):
     """Antidisponibilidad: retorna estudiantes que TIENEN clase en el bloque indicado."""
 
-    inicio = convertir_24(inicio)
-    fin = convertir_24(fin)
+    inicio_min = convertir_24(inicio)
+    fin_min = convertir_24(fin)
 
-    if inicio is None:
-        inicio = "06:00"
-    if fin is None:
-        fin = "22:00"
+    if inicio_min is None:
+        inicio_min = 6 * 60
+    if fin_min is None:
+        fin_min = 22 * 60
 
     if estudiantes_seleccionados:
         df = df[df["Nombre_Estudiante"].isin(estudiantes_seleccionados)]
@@ -104,10 +141,10 @@ def buscar_no_disponibles(df, dias, inicio, fin, estudiantes_seleccionados):
 
     ocupados = df_valido[
         (df_valido["Dia"].isin(dias)) &
-        ~((df_valido["Hora_Fin"] <= inicio) | (df_valido["Hora_Inicio"] >= fin))
+        ~((df_valido["Hora_Fin_min"] <= inicio_min) | (df_valido["Hora_Inicio_min"] >= fin_min))
     ]
 
-    ocupados_set = sorted(set(ocupados["Nombre_Estudiante"]))
+    ocupados_set = sorted(set(ocupados["Nombre_Estudiante"].dropna()))
 
     return ocupados_set
 
@@ -137,7 +174,7 @@ def index():
 
     df = cargar()
 
-    horas = generar_horas()
+    horas = HORAS
 
     orden_dias = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"]
     dias_csv = df["Dia"].dropna().str.upper().unique().tolist()
@@ -276,6 +313,40 @@ def index():
         todos_por_promo=todos_por_promo,
         modo=modo,
     )
+
+
+@app.route("/api/horario")
+def api_horario():
+    nombre = request.args.get("nombre")
+    if not nombre:
+        return jsonify({"error": "nombre requerido"}), 400
+    df = cargar()
+    df_est = df[df["Nombre_Estudiante"] == nombre]
+    if df_est.empty:
+        return jsonify([])
+
+    # Solo incluir filas con horas válidas para la visualización
+    df_est_valid = df_est[df_est["_horas_validas"] == True]
+
+    materias_unicas = df_est_valid["Materia"].unique().tolist()
+    color_map = {m: COLORES[i % len(COLORES)] for i, m in enumerate(materias_unicas)}
+
+    res = []
+    for _, row in df_est_valid.iterrows():
+        try:
+            codigo = str(int(row["Codigo_Clase"]))
+        except (ValueError, TypeError):
+            codigo = str(row["Codigo_Clase"]) if pd.notna(row["Codigo_Clase"]) else "--"
+        res.append({
+            "dia": row["Dia"],
+            "inicio": row["Hora_Inicio"],
+            "fin": row["Hora_Fin"],
+            "materia": str(row["Materia"]),
+            "codigo": codigo,
+            "color": color_map.get(row["Materia"], COLORES[0]),
+        })
+
+    return jsonify(res)
 
 
 if __name__ == "__main__":
