@@ -309,6 +309,13 @@
       font-size: 14px;
     }
 
+    .result-table td.est-promo {
+      color: #3a7afe;
+      font-weight: 600;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
     /* ===== HORARIO TABLE ===== */
     .horario-section {
       margin-top: 30px;
@@ -641,19 +648,31 @@
 
     </form>
 
+    <script id="app-data-horas" type="application/json">{{ horas|tojson }}</script>
+    <script id="app-data-dias-sel" type="application/json">{{ sel_dias|tojson }}</script>
+    <script id="app-data-sel-est" type="application/json">{{ sel_estudiante|tojson }}</script>
+    <script id="app-data-por-promo" type="application/json">{{ todos_por_promo|tojson }}</script>
+    <script id="app-data-disponibles" type="application/json">{{ disponibles|tojson }}</script>
+    <script id="app-data-dias" type="application/json">{{ dias|tojson }}</script>
+
     <script>
-      var horasDisponibles = JSON.parse('{{ horas|tojson|safe }}') || [];
-      var diasSeleccionados = JSON.parse('{{ sel_dias|tojson|safe }}') || [];
-      var selEstudiantes = JSON.parse('{{ sel_estudiante|tojson|safe }}') || [];
-      var todosEstudiantesPorPromo = {{ todos_por_promo| tojson | safe }};
+      var horasDisponibles = JSON.parse(document.getElementById('app-data-horas').textContent) || [];
+      var diasSeleccionados = JSON.parse(document.getElementById('app-data-dias-sel').textContent) || [];
+      var selEstudiantes   = JSON.parse(document.getElementById('app-data-sel-est').textContent) || [];
+      var todosEstudiantesPorPromo = JSON.parse(document.getElementById('app-data-por-promo').textContent);
+      var disponiblesLista = JSON.parse(document.getElementById('app-data-disponibles').textContent) || [];
       var jornadasGuardadas = {};
 
-      // Recuperar jornadas guardadas del localStorage si existen
-      diasSeleccionados.forEach(function (dia) {
+      // Recuperar jornadas guardadas del localStorage para TODOS los días conocidos
+      // (no solo los del POST, así se preservan entre búsquedas)
+      var _todosLosDias = JSON.parse(document.getElementById('app-data-dias').textContent) || [];
+      _todosLosDias.forEach(function (dia) {
         var inicioKey = 'inicio_' + dia;
         var finKey = 'fin_' + dia;
-        jornadasGuardadas[inicioKey] = localStorage.getItem(inicioKey) || '';
-        jornadasGuardadas[finKey] = localStorage.getItem(finKey) || '';
+        var vIni = localStorage.getItem(inicioKey);
+        var vFin = localStorage.getItem(finKey);
+        if (vIni) jornadasGuardadas[inicioKey] = vIni;
+        if (vFin) jornadasGuardadas[finKey] = vFin;
       });
 
       // Función para convertir hora a minutos
@@ -691,11 +710,11 @@
 
         var minutosInicio = horaAMinutos(horaInicioSeleccionada);
 
-        // Generar opciones filtradas para fin (solo horas >= inicio)
-        var optionsHTML = '<option value="">-- Usar por defecto --</option>';
+        // Generar opciones filtradas para fin (solo horas > inicio, sin opción vacía cuando hay inicio)
+        var optionsHTML = '';
         horasDisponibles.forEach(function (hora) {
           var minutosHora = horaAMinutos(hora);
-          if (minutosHora >= minutosInicio) {
+          if (minutosHora > minutosInicio) {
             var sel = (hora === finPrevio) ? ' selected' : '';
             optionsHTML += '<option value="' + hora + '"' + sel + '>' + hora + '</option>';
           }
@@ -703,15 +722,14 @@
 
         selectFin.innerHTML = optionsHTML;
 
-        // Si el valor previo ya no está en las opciones (está antes del inicio), limpiar
+        // Si el valor previo ya no está en las opciones (estaba antes del inicio), tomar el primero
         if (finPrevio && selectFin.value !== finPrevio) {
-          selectFin.value = '';
+          selectFin.selectedIndex = 0;
         }
       }
 
       function actualizarJornadas() {
         var checkboxes = document.querySelectorAll('input[name="dias"]:checked');
-        var jornadas = [];
         var order = 1;
 
         // Mostrar/ocultar sección de horarios por defecto según si hay días seleccionados
@@ -807,6 +825,8 @@
 
       function guardarJornada(select) {
         localStorage.setItem(select.name, select.value);
+        // Mantener jornadasGuardadas sincronizado con localStorage
+        jornadasGuardadas[select.name] = select.value;
       }
 
       // Inicializar al cargar la página
@@ -1002,13 +1022,26 @@
         {% endif %}
       </h3>
       <table class="result-table">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:4px 16px 4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">Nombre</th>
+            <th style="text-align:left; padding:4px 16px 4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">Documento</th>
+            <th style="text-align:left; padding:4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">Promoción</th>
+          </tr>
+        </thead>
+        <tbody>
         {% for est in disponibles %}
         <tr>
           <td class="est-nombre">{{est}}</td>
           <td class="est-doc">{{disponibles_info[est]}}</td>
+          <td class="est-promo">{{disponibles_promo.get(est, '')}}</td>
         </tr>
         {% endfor %}
+        </tbody>
       </table>
+      <div style="margin-top:12px;">
+        <button type="button" id="btn-crear-evento" onclick="abrirCrearEventoModal()">Crear evento con seleccionados</button>
+      </div>
     </div>
     {% endif %}
 
@@ -1148,6 +1181,35 @@
       <button class="modal-close" aria-label="Cerrar" onclick="closeModal()">×</button>
       <h3 id="modal-title"></h3>
       <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- Modal para crear evento -->
+  <div id="crear-evento-modal" class="modal-overlay" role="dialog" aria-hidden="true" style="display:none;">
+    <div class="modal" role="document" aria-labelledby="crear-evento-title">
+      <button class="modal-close" aria-label="Cerrar" onclick="closeCrearEventoModal()">×</button>
+      <h3 id="crear-evento-title">Crear evento</h3>
+      <div id="crear-evento-content">
+        <div id="crear-evento-list" style="max-height:260px; overflow:auto; border:1px solid #eee; padding:8px; margin-bottom:8px;"></div>
+
+        <label>Nombre del evento</label>
+        <input type="text" id="crear-evento-nombre" style="width:100%; padding:8px; margin-bottom:8px;" placeholder="Ej: Tutoría, Reunión, Asesoría..." />
+
+        <label>Día</label>
+        <select id="crear-evento-dia" style="margin-bottom:8px;"></select>
+
+        <label>Fecha</label>
+        <input type="date" id="crear-evento-fecha" style="width:100%; padding:8px; margin-bottom:8px;" />
+
+        <label>Hora</label>
+        <select id="crear-evento-hora" style="margin-bottom:4px;" disabled></select>
+        <input type="hidden" id="crear-evento-hora-value" />
+
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button type="button" onclick="submitCrearEvento()">Generar Excel y añadir</button>
+          <button type="button" onclick="closeCrearEventoModal()" style="background:#ccc; color:#111;">Cerrar</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1315,6 +1377,132 @@
     document.addEventListener('DOMContentLoaded', function () {
       attachResultClickHandlers();
     });
+
+    // Funciones para el modal de Crear Evento
+    function abrirCrearEventoModal() {
+      if (!disponiblesLista || disponiblesLista.length === 0) {
+        alert('No hay estudiantes disponibles para crear un evento.');
+        return;
+      }
+      var list = document.getElementById('crear-evento-list');
+      list.innerHTML = '';
+      disponiblesLista.forEach(function (nombre) {
+        var lab = document.createElement('label');
+        lab.style.display = 'block';
+        lab.style.marginBottom = '4px';
+        lab.innerHTML = '<input type="checkbox" class="crear-est-checkbox" value="' + nombre + '" checked> ' + nombre;
+        list.appendChild(lab);
+      });
+
+      // Poblamos selector de días
+      var diaSel = document.getElementById('crear-evento-dia');
+      diaSel.innerHTML = '';
+      // Mostrar solo los días seleccionados en el filtro. Si no seleccionó ninguno, mostrar todos.
+      var diasLista = diasSeleccionados.length > 0 ? diasSeleccionados : _todosLosDias;
+      if (!diasLista.length) {
+        diaSel.innerHTML = '<option value="">(sin día)</option>';
+      } else {
+        diasLista.forEach(function (d) {
+          var o = document.createElement('option'); o.value = d; o.textContent = d; diaSel.appendChild(o);
+        });
+      }
+
+      var horaSel = document.getElementById('crear-evento-hora');
+      horaSel.innerHTML = '';
+
+      // Función para obtener la hora según el día: prioriza selectores de jornada, luego localStorage, luego defaults
+      function getHoraForDia(dia) {
+        var inicio = '';
+        var fin = '';
+
+        if (dia) {
+          // 1. Intentar desde los selectores del formulario (si el día está renderizado en jornadas)
+          var selIni = document.querySelector('select[name="inicio_' + dia + '"]');
+          var selFin = document.querySelector('select[name="fin_' + dia + '"]');
+          if (selIni && selIni.value) inicio = selIni.value;
+          if (selFin && selFin.value) fin = selFin.value;
+
+          // 2. Si no hay en el DOM, intentar desde localStorage (guardado por guardarJornada)
+          if (!inicio) {
+            var lsIni = localStorage.getItem('inicio_' + dia);
+            if (lsIni) inicio = lsIni;
+          }
+          if (!fin) {
+            var lsFin = localStorage.getItem('fin_' + dia);
+            if (lsFin) fin = lsFin;
+          }
+        }
+
+        // 3. Fallback: usar selectores default del formulario
+        if (!inicio) {
+          var defIni = document.getElementById('inicio-default');
+          if (defIni && defIni.value) inicio = defIni.value;
+        }
+        if (!fin) {
+          var defFin = document.getElementById('fin-default');
+          if (defFin && defFin.value) fin = defFin.value;
+        }
+
+        if (inicio && fin) {
+          return inicio + ' - ' + fin;
+        } else if (inicio) {
+          return inicio;
+        }
+        // Si no hay nada configurado, informar vacío (no usar horasDisponibles[0] engañoso)
+        return '';
+      }
+
+      // Inicializar día seleccionado (primera opción) y fijar hora acorde
+      if (diaSel.options.length > 0) {
+        diaSel.selectedIndex = 0;
+      }
+
+      function actualizarHoraModal() {
+        var nueva = getHoraForDia(diaSel.value);
+        horaSel.innerHTML = '';
+        var op = document.createElement('option');
+        op.value = nueva;
+        op.textContent = nueva || '(sin hora configurada)';
+        horaSel.appendChild(op);
+        // Actualizar el input hidden que realmente se envía en el POST
+        document.getElementById('crear-evento-hora-value').value = nueva;
+      }
+
+      actualizarHoraModal();
+      horaSel.disabled = true;
+
+      // Usar onchange para evitar acumulación de listeners al reabrir el modal
+      diaSel.onchange = actualizarHoraModal;
+
+      var today = new Date().toISOString().slice(0,10);
+      document.getElementById('crear-evento-fecha').value = today;
+      document.getElementById('crear-evento-modal').style.display = 'flex';
+    }
+
+    function closeCrearEventoModal() {
+      document.getElementById('crear-evento-modal').style.display = 'none';
+      // Limpiar onchange del selector de días para evitar handlers huerfanos
+      var diaSel = document.getElementById('crear-evento-dia');
+      if (diaSel) diaSel.onchange = null;
+    }
+
+    function submitCrearEvento() {
+      var selected = Array.from(document.querySelectorAll('.crear-est-checkbox:checked')).map(function (i) { return i.value; });
+      if (!selected.length) { alert('Selecciona al menos un estudiante'); return; }
+      var nombre_evento = document.getElementById('crear-evento-nombre').value.trim();
+      if (!nombre_evento) { alert('Ingresa un nombre para el evento'); return; }
+      var dia = document.getElementById('crear-evento-dia').value;
+      var fecha = document.getElementById('crear-evento-fecha').value;
+      var hora = document.getElementById('crear-evento-hora').value;
+      var form = document.createElement('form'); form.method = 'POST'; form.action = '/crear_evento';
+      selected.forEach(function (n) { var inp = document.createElement('input'); inp.type = 'hidden'; inp.name = 'estudiantes'; inp.value = n; form.appendChild(inp); });
+      var fn = document.createElement('input'); fn.type = 'hidden'; fn.name = 'nombre_evento'; fn.value = nombre_evento; form.appendChild(fn);
+      var fd = document.createElement('input'); fd.type = 'hidden'; fd.name = 'dia'; fd.value = dia; form.appendChild(fd);
+      var ff = document.createElement('input'); ff.type = 'hidden'; ff.name = 'fecha'; ff.value = fecha; form.appendChild(ff);
+      var fh = document.createElement('input'); fh.type = 'hidden'; fh.name = 'hora'; fh.value = document.getElementById('crear-evento-hora-value').value; form.appendChild(fh);
+      document.body.appendChild(form);
+      form.submit();
+    }
   </script>
 
 </body>

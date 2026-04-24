@@ -1,5 +1,8 @@
 import os
-from flask import Flask, render_template, request, jsonify
+import requests
+from io import BytesIO
+from urllib.parse import quote_plus
+from flask import Flask, render_template, request, jsonify, send_file
 import pandas as pd
 from datetime import datetime, timedelta
 from threading import Lock
@@ -8,6 +11,13 @@ app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ruta_csv = os.path.join(BASE_DIR, "horarios_extraidos.csv")
+
+# Configuración opcional para Excel en la nube
+# URL fijada por defecto (puedes sobrescribirla con la variable de entorno EXCEL_URL)
+EXCEL_URL = os.environ.get("EXCEL_URL", "https://universidaddelacosta-my.sharepoint.com/:x:/g/personal/sbarriosb_cuc_edu_co/IQCQInUk0TAsRKREO6BIYHEWAYTOW10Tw65VVjKnMc63Xkw?e=pZiwUW")  # URL pública o pre-signed para descargar el .xlsx
+EXCEL_UPLOAD_URL = os.environ.get("EXCEL_UPLOAD_URL")  # URL para subir (PUT) el .xlsx actualizado (opcional)
+CLOUD_SHEET_GENERAL = os.environ.get("CLOUD_SHEET_GENERAL", "General")
+CLOUD_SHEET_EVENTS = os.environ.get("CLOUD_SHEET_EVENTS", "STAFF EVENTOS 2026")
 
 # Cache para evitar recargar CSV en cada petición
 _cached_df = None
@@ -93,6 +103,123 @@ def cargar():
         return _cached_df
 
 
+# ---------------------- Funciones para Excel en la nube ----------------------
+def download_excel_bytes():
+    """Descarga el archivo .xlsx desde EXCEL_URL (si está configurado) y retorna BytesIO.
+    Devuelve None si no está configurado o falla la descarga.
+    """
+    if not EXCEL_URL:
+        return None
+    try:
+        r = requests.get(EXCEL_URL, timeout=30)
+        r.raise_for_status()
+        return BytesIO(r.content)
+    except Exception as e:
+        app.logger.warning("No se pudo descargar Excel desde EXCEL_URL: %s", e)
+        return None
+
+
+def read_cloud_general_df():
+    """Lee la hoja 'General' del Excel en la nube y la devuelve como DataFrame.
+    Si no está disponible retorna DataFrame vacío.
+    """
+    b = download_excel_bytes()
+    if b is None:
+        return pd.DataFrame()
+    try:
+        df = pd.read_excel(b, sheet_name=CLOUD_SHEET_GENERAL, dtype=str)
+        return df
+    except Exception as e:
+        app.logger.warning("Error leyendo hoja '%s' del Excel: %s", CLOUD_SHEET_GENERAL, e)
+        return pd.DataFrame()
+
+
+def _find_column(df, candidates):
+    """Busca en df una columna que coincida con cualquiera de 'candidates' (lista de nombres posibles).
+    Retorna el nombre de columna encontrado o None.
+    """
+    if df is None or df.columns is None:
+        return None
+    cols = list(df.columns)
+    # coincidencia exacta (case-insensitive)
+    lowered = {str(c).strip().lower(): c for c in cols}
+    for cand in candidates:
+        if cand is None:
+            continue
+        key = cand.strip().lower()
+        if key in lowered:
+            return lowered[key]
+    # buscar por inclusión
+    for col in cols:
+        col_l = str(col).strip().lower()
+        for cand in candidates:
+            if cand and cand.strip().lower() in col_l:
+                return col
+    return None
+
+
+def get_student_info_by_names(names):
+    """Devuelve un dict mapping nombre_original -> info dict (PROM, ID, NOMBRE Y APELLIDOS, CORREO, CONTACTO).
+    Usa la hoja 'General' del Excel en la nube. Si no encuentra, rellena con valores vacíos.
+    """
+    gen = read_cloud_general_df()
+    result = {}
+    if gen.empty:
+        for n in names:
+            result[n] = {"PROM": "", "ID": "", "NOMBRE Y APELLIDOS": n, "CORREO": "", "CONTACTO": ""}
+        return result
+
+    # Mapear columnas probables
+    prom_col = _find_column(gen, ["prom", "promocion", "promo", "promoción"])
+    id_col = _find_column(gen, ["id", "id_estudiante", "documento", "identificacion"])
+    nombre_col = _find_column(gen, ["nombre", "nombre y apellidos", "nombres apellidos", "nombres"])
+    correo_col = _find_column(gen, ["correo", "email", "e-mail", "correo_electronico"])
+    contacto_col = _find_column(gen, ["contacto", "telefono", "teléfono", "celular", "cel"])
+
+    # Indexar por nombre normalizado
+    index_map = {}
+    if nombre_col is None:
+        # no hay columna nombre; devolver vacíos
+        for n in names:
+            result[n] = {"PROM": "", "ID": "", "NOMBRE Y APELLIDOS": n, "CORREO": "", "CONTACTO": ""}
+        return result
+
+    for _, row in gen.iterrows():
+        nm = str(row.get(nombre_col, "")).strip()
+        if not nm:
+            continue
+        index_map[nm.lower()] = row
+
+    for n in names:
+        key = str(n).strip()
+        row = None
+        # búsqueda exacta
+        if key.lower() in index_map:
+            row = index_map[key.lower()]
+        else:
+            # búsqueda por inclusión (parcial)
+            for k, r in index_map.items():
+                if key.lower() in k or k in key.lower():
+                    row = r
+                    break
+
+        if row is None:
+            result[n] = {"PROM": "", "ID": "", "NOMBRE Y APELLIDOS": key, "CORREO": "", "CONTACTO": ""}
+        else:
+            result[n] = {
+                "PROM": str(row.get(prom_col, "")) if prom_col else "",
+                "ID": str(row.get(id_col, "")) if id_col else "",
+                "NOMBRE Y APELLIDOS": str(row.get(nombre_col, key)),
+                "CORREO": str(row.get(correo_col, "")) if correo_col else "",
+                "CONTACTO": str(row.get(contacto_col, "")) if contacto_col else "",
+            }
+
+    return result
+# NOTA: edición/subida automática del Excel remoto deshabilitada por petición del usuario.
+# Se conservan funciones de lectura (si EXCEL_URL está configurada) y la generación de eventos
+# ahora sólo produce y devuelve un archivo nuevo al solicitar `/crear_evento`.
+
+
 def buscar_disponibles(df, dias, inicio, fin, estudiantes_seleccionados):
     inicio_min = convertir_24(inicio)
     fin_min = convertir_24(fin)
@@ -150,7 +277,7 @@ def buscar_no_disponibles(df, dias, inicio, fin, estudiantes_seleccionados):
 
 
 def construir_info_estudiantes(df):
-    """Retorna un dict {Nombre_Estudiante: ID_Estudiante} con el primer registro de cada estudiante."""
+    """Retorna un dict {Nombre_Estudiante: {id, promo}} con el primer registro de cada estudiante."""
     info = {}
     for _, row in df.drop_duplicates(subset="Nombre_Estudiante").iterrows():
         nombre = row["Nombre_Estudiante"]
@@ -158,7 +285,8 @@ def construir_info_estudiantes(df):
             doc = str(int(row["ID_Estudiante"]))
         except (ValueError, TypeError):
             doc = str(row["ID_Estudiante"]) if pd.notna(row["ID_Estudiante"]) else ""
-        info[nombre] = doc
+        promo = str(row["Promocion"]) if pd.notna(row.get("Promocion", None)) else ""
+        info[nombre] = {"id": doc, "promo": promo}
     return info
 
 
@@ -185,6 +313,7 @@ def index():
 
     disponibles = []
     disponibles_info = {}  # {nombre: id_documento}
+    disponibles_promo = {}  # {nombre: promo}
     horario = []
     sel_estudiante = []
     sel_dias = []
@@ -252,9 +381,10 @@ def index():
         else:
             disponibles = []
 
-        # Construir mapa nombre -> documento para los disponibles
+        # Construir mapa nombre -> {id, promo} para los disponibles
         info_map = construir_info_estudiantes(df_filtered)
-        disponibles_info = {nombre: info_map.get(nombre, "") for nombre in disponibles}
+        disponibles_info = {nombre: info_map.get(nombre, {"id": "", "promo": ""}).get("id", "") for nombre in disponibles}
+        disponibles_promo = {nombre: info_map.get(nombre, {"id": "", "promo": ""}).get("promo", "") for nombre in disponibles}
 
         if sel_estudiante:
             clases = df_filtered[df_filtered["Nombre_Estudiante"].isin(sel_estudiante)]
@@ -303,6 +433,7 @@ def index():
         estudiantes=estudiantes,
         disponibles=disponibles,
         disponibles_info=disponibles_info,
+        disponibles_promo=disponibles_promo,
         horario=horario,
         dias_semana=dias,
         sel_estudiante=sel_estudiante,
@@ -347,6 +478,69 @@ def api_horario():
         })
 
     return jsonify(res)
+
+
+@app.route('/crear_evento', methods=['POST'])
+def crear_evento():
+    estudiantes = request.form.getlist('estudiantes')
+    if not estudiantes:
+        return jsonify({'error': 'no hay estudiantes seleccionados'}), 400
+
+    nombre_evento = request.form.get('nombre_evento', '')
+    dia = request.form.get('dia', '')
+    fecha = request.form.get('fecha', '')
+    hora = request.form.get('hora', '')
+
+    # Convertir fecha de YYYY-MM-DD a formato amigable
+    fecha_formateada = ""
+    if fecha:
+        try:
+            dt = datetime.strptime(fecha, "%Y-%m-%d")
+            meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+            fecha_formateada = f"{dt.day} de {meses[dt.month - 1]}"
+        except Exception:
+            fecha_formateada = fecha
+
+    dia_formateado = (dia.capitalize() + ", ") if dia else ""
+    dia_completo = f"{dia_formateado}{fecha_formateada}" if fecha_formateada else dia.capitalize()
+
+    # Formatear la hora: soporta "H:MM AM/PM - H:MM AM/PM" o valor simple "H:MM AM/PM"
+    if " - " in hora:
+        partes_hora = hora.split(" - ", 1)
+        hora_formateada = " - ".join(
+            p.strip().replace("AM", "am").replace("PM", "pm") for p in partes_hora
+        )
+    else:
+        hora_formateada = hora.strip().replace("AM", "am").replace("PM", "pm")
+
+    # Obtener ID de cada estudiante directamente del CSV local
+    df_local = cargar()
+    _info_map = construir_info_estudiantes(df_local)  # {nombre: {id, promo}}
+    id_map = {k: v["id"] for k, v in _info_map.items()}
+
+    filas = []
+    for est in estudiantes:
+        fila = {
+            'Día': dia_completo,
+            'Hora': hora_formateada,
+            'Becados': est,
+            'ID': id_map.get(est, ''),
+        }
+        filas.append(fila)
+
+    new_df = pd.DataFrame(filas)
+
+    # Generar Excel en memoria y devolverlo como descarga (no se edita/actualiza ningún archivo remoto)
+    out = BytesIO()
+    with pd.ExcelWriter(out, engine='openpyxl') as writer:
+        new_df.to_excel(writer, sheet_name=CLOUD_SHEET_EVENTS, index=False)
+    out.seek(0)
+    filename = f"eventos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    # Usamos download_name (Flask >=2.0). Si tu versión no lo soporta, reemplaza por 'attachment_filename'.
+    return send_file(out,
+                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                     as_attachment=True,
+                     download_name=filename)
 
 
 if __name__ == "__main__":
