@@ -36,6 +36,29 @@
       margin-bottom: 20px;
     }
 
+    .top-menu {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .menu-link {
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #eef2f7;
+      color: #1a1a2e;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #dfe6ef;
+    }
+
+    .menu-link.active {
+      background: #1f5ad6;
+      color: #fff;
+      border-color: #1f5ad6;
+    }
+
     label {
       font-weight: 600;
       color: #333;
@@ -316,6 +339,39 @@
       white-space: nowrap;
     }
 
+    .copy-btn {
+      width: auto;
+      margin: 0;
+      margin-bottom: 0;
+      padding: 6px 10px;
+      font-size: 12px;
+      background: #1f5ad6;
+      border-radius: 6px;
+    }
+
+    .copy-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .copy-tools .tool-btn {
+      width: auto;
+      margin: 0;
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+      background: #2a3c5a;
+    }
+
+    .result-table th.check-col,
+    .result-table td.check-col {
+      width: 34px;
+      text-align: center;
+      padding-right: 8px;
+    }
+
     /* ===== HORARIO TABLE ===== */
     .horario-section {
       margin-top: 30px;
@@ -555,6 +611,10 @@
 
 <body>
   <div class="container">
+    <nav class="top-menu">
+      <a class="menu-link {% if active_tab == 'disponibilidad' %}active{% endif %}" href="/">Disponibilidad</a>
+      <a class="menu-link {% if active_tab == 'staff' %}active{% endif %}" href="/staff">Eventos y asistencia staff</a>
+    </nav>
 
     <h2>Buscar estudiantes disponibles</h2>
 
@@ -1021,27 +1081,40 @@
         Estudiantes disponibles ({{disponibles|length}})
         {% endif %}
       </h3>
+      <div class="copy-tools">
+        <button type="button" class="tool-btn" id="btn-select-all">Seleccionar todo</button>
+        <button type="button" class="tool-btn" id="btn-clear-all">Quitar selección</button>
+        <button type="button" class="tool-btn" id="btn-copy-selected">Copiar seleccionados</button>
+        <button type="button" class="tool-btn" id="btn-copy-all">Copiar todo</button>
+      </div>
       <table class="result-table">
         <thead>
           <tr>
+            <th class="check-col"><input type="checkbox" id="check-all-rows"></th>
             <th style="text-align:left; padding:4px 16px 4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">Nombre</th>
             <th style="text-align:left; padding:4px 16px 4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">Documento</th>
             <th style="text-align:left; padding:4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">Promoción</th>
+            <th style="text-align:left; padding:4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">Acción</th>
           </tr>
         </thead>
         <tbody>
         {% for est in disponibles %}
-        <tr>
+        <tr class="result-row" data-name="{{est}}" data-doc="{{disponibles_info[est]}}" data-promo="{{disponibles_promo.get(est, '')}}">
+          <td class="check-col"><input type="checkbox" class="row-select"></td>
           <td class="est-nombre">{{est}}</td>
           <td class="est-doc">{{disponibles_info[est]}}</td>
           <td class="est-promo">{{disponibles_promo.get(est, '')}}</td>
+          <td>
+            <button type="button"
+                    class="copy-btn"
+                    data-name="{{est}}"
+                    data-doc="{{disponibles_info[est]}}"
+                    data-promo="{{disponibles_promo.get(est, '')}}">Copiar</button>
+          </td>
         </tr>
         {% endfor %}
         </tbody>
       </table>
-      <div style="margin-top:12px;">
-        <button type="button" id="btn-crear-evento" onclick="abrirCrearEventoModal()">Crear evento con seleccionados</button>
-      </div>
     </div>
     {% endif %}
 
@@ -1184,48 +1257,129 @@
     </div>
   </div>
 
-  <!-- Modal para crear evento -->
-  <div id="crear-evento-modal" class="modal-overlay" role="dialog" aria-hidden="true" style="display:none;">
-    <div class="modal" role="document" aria-labelledby="crear-evento-title">
-      <button class="modal-close" aria-label="Cerrar" onclick="closeCrearEventoModal()">×</button>
-      <h3 id="crear-evento-title">Crear evento</h3>
-      <div id="crear-evento-content">
-        <div id="crear-evento-list" style="max-height:260px; overflow:auto; border:1px solid #eee; padding:8px; margin-bottom:8px;"></div>
-
-        <label>Nombre del evento</label>
-        <input type="text" id="crear-evento-nombre" style="width:100%; padding:8px; margin-bottom:8px;" placeholder="Ej: Tutoría, Reunión, Asesoría..." />
-
-        <label>Día</label>
-        <select id="crear-evento-dia" style="margin-bottom:8px;"></select>
-
-        <label>Fecha</label>
-        <input type="date" id="crear-evento-fecha" style="width:100%; padding:8px; margin-bottom:8px;" />
-
-        <label>Hora</label>
-        <select id="crear-evento-hora" style="margin-bottom:4px;" disabled></select>
-        <input type="hidden" id="crear-evento-hora-value" />
-
-        <div style="margin-top:10px; display:flex; gap:8px;">
-          <button type="button" onclick="submitCrearEvento()">Generar Excel y añadir</button>
-          <button type="button" onclick="closeCrearEventoModal()" style="background:#ccc; color:#111;">Cerrar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
     // Manejo del popup de horario
     function attachResultClickHandlers() {
       var rows = document.querySelectorAll('.result-table tr');
       rows.forEach(function (row) {
         row.style.cursor = 'pointer';
-        row.addEventListener('click', function () {
+        row.addEventListener('click', function (e) {
+          if (e.target && (e.target.closest('.copy-btn') || e.target.closest('.row-select') || e.target.closest('.check-col'))) return;
           var nombreEl = this.querySelector('.est-nombre');
           if (!nombreEl) return;
           var nombre = nombreEl.textContent.trim();
           abrirHorarioPopup(nombre);
         });
       });
+    }
+
+    function buildRowsText(rows) {
+      var lines = ['Nombre\tDocumento\tPromoción'];
+      rows.forEach(function (row) {
+        var name = row.getAttribute('data-name') || '';
+        var doc = row.getAttribute('data-doc') || '';
+        var promo = row.getAttribute('data-promo') || '';
+        lines.push(name + '\t' + doc + '\t' + promo);
+      });
+      return lines.join('\n');
+    }
+
+    function copyTextWithFeedback(text, btn) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          if (!btn) return;
+          var old = btn.textContent;
+          btn.textContent = 'Copiado';
+          setTimeout(function () { btn.textContent = old; }, 1200);
+        }).catch(function () {
+          fallbackCopy(text, btn);
+        });
+      } else {
+        fallbackCopy(text, btn);
+      }
+    }
+
+    function attachCopyHandlers() {
+      var buttons = document.querySelectorAll('.copy-btn');
+      buttons.forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var name = btn.getAttribute('data-name') || '';
+          var doc = btn.getAttribute('data-doc') || '';
+          var promo = btn.getAttribute('data-promo') || '';
+          var payload = 'Nombre\tDocumento\tPromoción\n' + name + '\t' + doc + '\t' + promo;
+          copyTextWithFeedback(payload, btn);
+        });
+      });
+    }
+
+    function attachBulkCopyHandlers() {
+      var checkAll = document.getElementById('check-all-rows');
+      var rowChecks = Array.from(document.querySelectorAll('.row-select'));
+      var btnSelectAll = document.getElementById('btn-select-all');
+      var btnClearAll = document.getElementById('btn-clear-all');
+      var btnCopySelected = document.getElementById('btn-copy-selected');
+      var btnCopyAll = document.getElementById('btn-copy-all');
+      var rows = Array.from(document.querySelectorAll('.result-row'));
+
+      if (!rows.length) return;
+
+      function syncHeaderCheck() {
+        var selectedCount = rowChecks.filter(function (cb) { return cb.checked; }).length;
+        checkAll.checked = selectedCount > 0 && selectedCount === rowChecks.length;
+      }
+
+      checkAll.addEventListener('change', function () {
+        rowChecks.forEach(function (cb) { cb.checked = checkAll.checked; });
+      });
+
+      rowChecks.forEach(function (cb) {
+        cb.addEventListener('change', syncHeaderCheck);
+      });
+
+      btnSelectAll.addEventListener('click', function () {
+        rowChecks.forEach(function (cb) { cb.checked = true; });
+        syncHeaderCheck();
+      });
+
+      btnClearAll.addEventListener('click', function () {
+        rowChecks.forEach(function (cb) { cb.checked = false; });
+        syncHeaderCheck();
+      });
+
+      btnCopySelected.addEventListener('click', function () {
+        var selectedRows = rows.filter(function (row) {
+          var cb = row.querySelector('.row-select');
+          return cb && cb.checked;
+        });
+        if (!selectedRows.length) {
+          alert('Selecciona al menos una fila para copiar.');
+          return;
+        }
+        copyTextWithFeedback(buildRowsText(selectedRows), btnCopySelected);
+      });
+
+      btnCopyAll.addEventListener('click', function () {
+        copyTextWithFeedback(buildRowsText(rows), btnCopyAll);
+      });
+    }
+
+    function fallbackCopy(texto, btn) {
+      var ta = document.createElement('textarea');
+      var old = btn ? btn.textContent : '';
+      ta.value = texto;
+      ta.setAttribute('readonly', 'readonly');
+      ta.style.position = 'absolute';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (btn) {
+        btn.textContent = 'Copiado';
+        setTimeout(function () { btn.textContent = old; }, 1200);
+      }
     }
 
     function abrirHorarioPopup(nombre) {
@@ -1376,133 +1530,9 @@
     // Adjuntar handlers al cargar
     document.addEventListener('DOMContentLoaded', function () {
       attachResultClickHandlers();
+      attachCopyHandlers();
+      attachBulkCopyHandlers();
     });
-
-    // Funciones para el modal de Crear Evento
-    function abrirCrearEventoModal() {
-      if (!disponiblesLista || disponiblesLista.length === 0) {
-        alert('No hay estudiantes disponibles para crear un evento.');
-        return;
-      }
-      var list = document.getElementById('crear-evento-list');
-      list.innerHTML = '';
-      disponiblesLista.forEach(function (nombre) {
-        var lab = document.createElement('label');
-        lab.style.display = 'block';
-        lab.style.marginBottom = '4px';
-        lab.innerHTML = '<input type="checkbox" class="crear-est-checkbox" value="' + nombre + '" checked> ' + nombre;
-        list.appendChild(lab);
-      });
-
-      // Poblamos selector de días
-      var diaSel = document.getElementById('crear-evento-dia');
-      diaSel.innerHTML = '';
-      // Mostrar solo los días seleccionados en el filtro. Si no seleccionó ninguno, mostrar todos.
-      var diasLista = diasSeleccionados.length > 0 ? diasSeleccionados : _todosLosDias;
-      if (!diasLista.length) {
-        diaSel.innerHTML = '<option value="">(sin día)</option>';
-      } else {
-        diasLista.forEach(function (d) {
-          var o = document.createElement('option'); o.value = d; o.textContent = d; diaSel.appendChild(o);
-        });
-      }
-
-      var horaSel = document.getElementById('crear-evento-hora');
-      horaSel.innerHTML = '';
-
-      // Función para obtener la hora según el día: prioriza selectores de jornada, luego localStorage, luego defaults
-      function getHoraForDia(dia) {
-        var inicio = '';
-        var fin = '';
-
-        if (dia) {
-          // 1. Intentar desde los selectores del formulario (si el día está renderizado en jornadas)
-          var selIni = document.querySelector('select[name="inicio_' + dia + '"]');
-          var selFin = document.querySelector('select[name="fin_' + dia + '"]');
-          if (selIni && selIni.value) inicio = selIni.value;
-          if (selFin && selFin.value) fin = selFin.value;
-
-          // 2. Si no hay en el DOM, intentar desde localStorage (guardado por guardarJornada)
-          if (!inicio) {
-            var lsIni = localStorage.getItem('inicio_' + dia);
-            if (lsIni) inicio = lsIni;
-          }
-          if (!fin) {
-            var lsFin = localStorage.getItem('fin_' + dia);
-            if (lsFin) fin = lsFin;
-          }
-        }
-
-        // 3. Fallback: usar selectores default del formulario
-        if (!inicio) {
-          var defIni = document.getElementById('inicio-default');
-          if (defIni && defIni.value) inicio = defIni.value;
-        }
-        if (!fin) {
-          var defFin = document.getElementById('fin-default');
-          if (defFin && defFin.value) fin = defFin.value;
-        }
-
-        if (inicio && fin) {
-          return inicio + ' - ' + fin;
-        } else if (inicio) {
-          return inicio;
-        }
-        // Si no hay nada configurado, informar vacío (no usar horasDisponibles[0] engañoso)
-        return '';
-      }
-
-      // Inicializar día seleccionado (primera opción) y fijar hora acorde
-      if (diaSel.options.length > 0) {
-        diaSel.selectedIndex = 0;
-      }
-
-      function actualizarHoraModal() {
-        var nueva = getHoraForDia(diaSel.value);
-        horaSel.innerHTML = '';
-        var op = document.createElement('option');
-        op.value = nueva;
-        op.textContent = nueva || '(sin hora configurada)';
-        horaSel.appendChild(op);
-        // Actualizar el input hidden que realmente se envía en el POST
-        document.getElementById('crear-evento-hora-value').value = nueva;
-      }
-
-      actualizarHoraModal();
-      horaSel.disabled = true;
-
-      // Usar onchange para evitar acumulación de listeners al reabrir el modal
-      diaSel.onchange = actualizarHoraModal;
-
-      var today = new Date().toISOString().slice(0,10);
-      document.getElementById('crear-evento-fecha').value = today;
-      document.getElementById('crear-evento-modal').style.display = 'flex';
-    }
-
-    function closeCrearEventoModal() {
-      document.getElementById('crear-evento-modal').style.display = 'none';
-      // Limpiar onchange del selector de días para evitar handlers huerfanos
-      var diaSel = document.getElementById('crear-evento-dia');
-      if (diaSel) diaSel.onchange = null;
-    }
-
-    function submitCrearEvento() {
-      var selected = Array.from(document.querySelectorAll('.crear-est-checkbox:checked')).map(function (i) { return i.value; });
-      if (!selected.length) { alert('Selecciona al menos un estudiante'); return; }
-      var nombre_evento = document.getElementById('crear-evento-nombre').value.trim();
-      if (!nombre_evento) { alert('Ingresa un nombre para el evento'); return; }
-      var dia = document.getElementById('crear-evento-dia').value;
-      var fecha = document.getElementById('crear-evento-fecha').value;
-      var hora = document.getElementById('crear-evento-hora').value;
-      var form = document.createElement('form'); form.method = 'POST'; form.action = '/crear_evento';
-      selected.forEach(function (n) { var inp = document.createElement('input'); inp.type = 'hidden'; inp.name = 'estudiantes'; inp.value = n; form.appendChild(inp); });
-      var fn = document.createElement('input'); fn.type = 'hidden'; fn.name = 'nombre_evento'; fn.value = nombre_evento; form.appendChild(fn);
-      var fd = document.createElement('input'); fd.type = 'hidden'; fd.name = 'dia'; fd.value = dia; form.appendChild(fd);
-      var ff = document.createElement('input'); ff.type = 'hidden'; ff.name = 'fecha'; ff.value = fecha; form.appendChild(ff);
-      var fh = document.createElement('input'); fh.type = 'hidden'; fh.name = 'hora'; fh.value = document.getElementById('crear-evento-hora-value').value; form.appendChild(fh);
-      document.body.appendChild(form);
-      form.submit();
-    }
   </script>
 
 </body>

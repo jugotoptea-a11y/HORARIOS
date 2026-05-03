@@ -1,8 +1,11 @@
 import os
+import json
+import uuid
+import calendar
 import requests
 from io import BytesIO
-from urllib.parse import quote_plus
-from flask import Flask, render_template, request, jsonify, send_file
+from urllib.parse import urlencode
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 import pandas as pd
 from datetime import datetime, timedelta
 from threading import Lock
@@ -18,6 +21,8 @@ EXCEL_URL = os.environ.get("EXCEL_URL", "https://universidaddelacosta-my.sharepo
 EXCEL_UPLOAD_URL = os.environ.get("EXCEL_UPLOAD_URL")  # URL para subir (PUT) el .xlsx actualizado (opcional)
 CLOUD_SHEET_GENERAL = os.environ.get("CLOUD_SHEET_GENERAL", "General")
 CLOUD_SHEET_EVENTS = os.environ.get("CLOUD_SHEET_EVENTS", "STAFF EVENTOS 2026")
+STAFF_EVENTS_CSV = os.path.join(BASE_DIR, "staff_eventos.csv")
+STAFF_EVENTS_JSON_LEGACY = os.path.join(BASE_DIR, "staff_eventos.json")
 
 # Cache para evitar recargar CSV en cada petición
 _cached_df = None
@@ -216,8 +221,7 @@ def get_student_info_by_names(names):
 
     return result
 # NOTA: edición/subida automática del Excel remoto deshabilitada por petición del usuario.
-# Se conservan funciones de lectura (si EXCEL_URL está configurada) y la generación de eventos
-# ahora sólo produce y devuelve un archivo nuevo al solicitar `/crear_evento`.
+# Se conservan funciones de lectura del Excel remoto (si EXCEL_URL está configurada).
 
 
 def buscar_disponibles(df, dias, inicio, fin, estudiantes_seleccionados):
@@ -295,6 +299,292 @@ COLORES = [
     "#1abc9c", "#e67e22", "#2980b9", "#c0392b", "#27ae60",
     "#8e44ad", "#16a085", "#d35400", "#2c3e50", "#f1c40f",
 ]
+
+ESTADOS_ASISTENCIA = {"pendiente", "asistio", "excusa", "no"}
+
+
+def _safe_text(value):
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
+def _normalizar_estado_asistencia(value):
+    estado = _safe_text(value).lower()
+    if not estado:
+        return "pendiente"
+
+    alias = {
+        "n": "no",
+        "no": "no",
+        "no_fue": "no",
+        "no fue": "no",
+        "nofue": "no",
+    }
+    estado = alias.get(estado, estado)
+    if estado not in ESTADOS_ASISTENCIA:
+        return "pendiente"
+    return estado
+
+
+def _parse_month_key(month_key):
+    try:
+        return datetime.strptime(month_key, "%Y-%m")
+    except Exception:
+        return datetime.now().replace(day=1)
+
+
+def _shift_month(month_key, delta):
+    base = _parse_month_key(month_key)
+    year = base.year
+    month = base.month + delta
+    while month < 1:
+        month += 12
+        year -= 1
+    while month > 12:
+        month -= 12
+        year += 1
+    return f"{year:04d}-{month:02d}"
+
+
+def _split_promociones(texto):
+    raw = _safe_text(texto)
+    if not raw:
+        return []
+    return [p.strip() for p in raw.split("|") if p.strip()]
+
+
+def _eventos_a_filas_csv(events):
+    filas = []
+    for ev in events:
+        base = {
+            "event_id": _safe_text(ev.get("id")),
+            "nombre": _safe_text(ev.get("nombre")),
+            "fecha": _safe_text(ev.get("fecha")),
+            "hora_inicio": _safe_text(ev.get("hora_inicio")),
+            "hora_fin": _safe_text(ev.get("hora_fin")),
+            "promociones": "|".join([_safe_text(p) for p in ev.get("promociones", []) if _safe_text(p)]),
+            "creado_en": _safe_text(ev.get("creado_en")),
+        }
+        staff = ev.get("staff", []) or []
+        if not staff:
+            filas.append({
+                **base,
+                "staff_nombre": "",
+                "staff_id": "",
+                "staff_promo": "",
+                "staff_estado": "",
+                "staff_nota": "",
+            })
+            continue
+        for st in staff:
+            filas.append({
+                **base,
+                "staff_nombre": _safe_text(st.get("nombre")),
+                "staff_id": _safe_text(st.get("id")),
+                "staff_promo": _safe_text(st.get("promo")),
+                "staff_estado": _safe_text(st.get("estado")),
+                "staff_nota": _safe_text(st.get("nota")),
+            })
+    return filas
+
+
+def _filas_csv_a_eventos(df_csv):
+    if df_csv is None or df_csv.empty:
+        return []
+    events = []
+    for event_id, grp in df_csv.groupby("event_id", dropna=False):
+        grp = grp.fillna("")
+        first = grp.iloc[0]
+        ev = {
+            "id": _safe_text(first.get("event_id")) or uuid.uuid4().hex,
+            "nombre": _safe_text(first.get("nombre")) or "Evento sin nombre",
+            "fecha": _safe_text(first.get("fecha")),
+            "hora_inicio": _safe_text(first.get("hora_inicio")),
+            "hora_fin": _safe_text(first.get("hora_fin")),
+            "promociones": _split_promociones(first.get("promociones")),
+            "staff": [],
+            "creado_en": _safe_text(first.get("creado_en")),
+        }
+        for _, row in grp.iterrows():
+            staff_name = _safe_text(row.get("staff_nombre"))
+            if not staff_name:
+                continue
+            estado = _normalizar_estado_asistencia(row.get("staff_estado"))
+            ev["staff"].append({
+                "nombre": staff_name,
+                "id": _safe_text(row.get("staff_id")),
+                "promo": _safe_text(row.get("staff_promo")),
+                "estado": estado,
+                "nota": _safe_text(row.get("staff_nota")),
+            })
+        events.append(ev)
+    return events
+
+
+def _migrar_json_legacy_a_csv_si_aplica():
+    if os.path.exists(STAFF_EVENTS_CSV):
+        return
+    if not os.path.exists(STAFF_EVENTS_JSON_LEGACY):
+        return
+    try:
+        with open(STAFF_EVENTS_JSON_LEGACY, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+        events = payload.get("events", []) if isinstance(payload, dict) else []
+        events = normalizar_eventos_staff(events)
+        guardar_eventos_staff(events)
+    except Exception as e:
+        app.logger.warning("No se pudo migrar JSON legacy a CSV: %s", e)
+
+
+def cargar_eventos_staff():
+    _migrar_json_legacy_a_csv_si_aplica()
+    if not os.path.exists(STAFF_EVENTS_CSV):
+        return []
+    try:
+        df_csv = pd.read_csv(STAFF_EVENTS_CSV, dtype=str, keep_default_na=False)
+        return _filas_csv_a_eventos(df_csv)
+    except Exception as e:
+        app.logger.warning("No se pudo leer %s: %s", STAFF_EVENTS_CSV, e)
+        return []
+
+
+def guardar_eventos_staff(events):
+    events = normalizar_eventos_staff(events)
+    filas = _eventos_a_filas_csv(events)
+    cols = [
+        "event_id",
+        "nombre",
+        "fecha",
+        "hora_inicio",
+        "hora_fin",
+        "promociones",
+        "creado_en",
+        "staff_nombre",
+        "staff_id",
+        "staff_promo",
+        "staff_estado",
+        "staff_nota",
+    ]
+    df_out = pd.DataFrame(filas, columns=cols)
+    df_out.to_csv(STAFF_EVENTS_CSV, index=False, encoding="utf-8-sig")
+
+
+def construir_catalogo_staff(df):
+    info = construir_info_estudiantes(df)
+    por_promo = {}
+    for nombre, row in info.items():
+        promo = _safe_text(row.get("promo")) or "SIN_PROMOCION"
+        por_promo.setdefault(promo, []).append({
+            "nombre": nombre,
+            "id": _safe_text(row.get("id")),
+            "promo": promo,
+        })
+    for promo in por_promo:
+        por_promo[promo] = sorted(por_promo[promo], key=lambda x: x["nombre"])
+    promociones = sorted(por_promo.keys(), key=str, reverse=True)
+    return promociones, por_promo
+
+
+def _normalizar_evento_staff(raw_event):
+    staff_raw = raw_event.get("staff", [])
+    staff = []
+    for s in staff_raw:
+        estado = _normalizar_estado_asistencia(s.get("estado"))
+        staff.append({
+            "nombre": _safe_text(s.get("nombre")),
+            "id": _safe_text(s.get("id")),
+            "promo": _safe_text(s.get("promo")),
+            "estado": estado,
+            "nota": _safe_text(s.get("nota")),
+        })
+    staff = [s for s in staff if s["nombre"]]
+    return {
+        "id": _safe_text(raw_event.get("id")) or uuid.uuid4().hex,
+        "nombre": _safe_text(raw_event.get("nombre")) or "Evento sin nombre",
+        "fecha": _safe_text(raw_event.get("fecha")),
+        "hora_inicio": _safe_text(raw_event.get("hora_inicio")),
+        "hora_fin": _safe_text(raw_event.get("hora_fin")),
+        "promociones": [_safe_text(p) for p in raw_event.get("promociones", []) if _safe_text(p)],
+        "staff": staff,
+        "creado_en": _safe_text(raw_event.get("creado_en")),
+    }
+
+
+def normalizar_eventos_staff(events):
+    normalizados = []
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        ev = _normalizar_evento_staff(event)
+        if ev["fecha"]:
+            normalizados.append(ev)
+    normalizados.sort(key=lambda x: (x["fecha"], x["hora_inicio"], x["nombre"]))
+    return normalizados
+
+
+def filtrar_eventos_staff(events, month_key, promociones_seleccionadas):
+    month_prefix = f"{month_key}-"
+    filtrados = [e for e in events if _safe_text(e.get("fecha")).startswith(month_prefix)]
+    if promociones_seleccionadas:
+        promos_set = {str(p) for p in promociones_seleccionadas}
+        filtrados = [
+            e for e in filtrados
+            if promos_set.intersection(set([str(p) for p in e.get("promociones", [])]))
+        ]
+    return filtrados
+
+
+def resumen_evento_staff(event):
+    resumen = {"asistio": 0, "excusa": 0, "no": 0, "pendiente": 0}
+    for s in event.get("staff", []):
+        estado = _normalizar_estado_asistencia(s.get("estado"))
+        if estado not in resumen:
+            estado = "pendiente"
+        resumen[estado] += 1
+    return resumen
+
+
+def construir_calendario(month_key, eventos_mes):
+    dt = _parse_month_key(month_key)
+    year = dt.year
+    month = dt.month
+    cal = calendar.Calendar(firstweekday=0)
+
+    eventos_por_fecha = {}
+    for ev in eventos_mes:
+        fecha = ev.get("fecha")
+        if not fecha:
+            continue
+        eventos_por_fecha.setdefault(fecha, []).append(ev)
+
+    weeks = []
+    for week in cal.monthdatescalendar(year, month):
+        row = []
+        for day in week:
+            day_key = day.strftime("%Y-%m-%d")
+            eventos_dia = eventos_por_fecha.get(day_key, [])
+            resumen = {"asistio": 0, "excusa": 0, "no": 0, "pendiente": 0}
+            event_names = []
+            for ev in eventos_dia:
+                r = resumen_evento_staff(ev)
+                resumen["asistio"] += r["asistio"]
+                resumen["excusa"] += r["excusa"]
+                resumen["no"] += r["no"]
+                resumen["pendiente"] += r["pendiente"]
+                nombre_evento = _safe_text(ev.get("nombre"))
+                if nombre_evento:
+                    event_names.append(nombre_evento)
+            row.append({
+                "date": day_key,
+                "day": day.day,
+                "in_month": day.month == month,
+                "event_count": len(eventos_dia),
+                "resumen": resumen,
+                "event_names": event_names,
+            })
+        weeks.append(row)
+    return weeks, eventos_por_fecha
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -427,6 +717,7 @@ def index():
 
     return render_template(
         "index.html",
+        active_tab="disponibilidad",
         horas=horas,
         dias=dias,
         promociones=promociones,
@@ -443,6 +734,200 @@ def index():
         sel_promociones=sel_promociones,
         todos_por_promo=todos_por_promo,
         modo=modo,
+    )
+
+
+@app.route("/staff", methods=["GET", "POST"])
+def staff():
+    df = cargar()
+    promociones, estudiantes_por_promo = construir_catalogo_staff(df)
+    info_map = construir_info_estudiantes(df)
+
+    mes_actual = request.args.get("mes") or datetime.now().strftime("%Y-%m")
+    dia_seleccionado = request.args.get("dia", "")
+    promociones_sel_get = request.args.getlist("promociones")
+    promociones_sel = [p for p in promociones_sel_get if p]
+
+    eventos = normalizar_eventos_staff(cargar_eventos_staff())
+
+    if request.method == "POST":
+        accion = request.form.get("accion", "")
+        mes_post = request.form.get("mes", mes_actual)
+        dia_post = request.form.get("dia", dia_seleccionado)
+        promos_post = [p for p in request.form.getlist("promociones_contexto") if p]
+
+        def find_event(event_id):
+            for ev in eventos:
+                if ev.get("id") == event_id:
+                    return ev
+            return None
+
+        if accion == "crear_evento_staff":
+            nombre_evento = _safe_text(request.form.get("nombre_evento")) or "Evento"
+            fecha = _safe_text(request.form.get("fecha"))
+            hora_inicio = _safe_text(request.form.get("hora_inicio"))
+            hora_fin = _safe_text(request.form.get("hora_fin"))
+            promociones_form = [p for p in request.form.getlist("promociones_evento") if p]
+            staff_sel = sorted(set([n for n in request.form.getlist("staff") if _safe_text(n)]))
+
+            if fecha:
+                staff_rows = []
+                for nombre in staff_sel:
+                    person = info_map.get(nombre, {})
+                    staff_rows.append({
+                        "nombre": nombre,
+                        "id": _safe_text(person.get("id")),
+                        "promo": _safe_text(person.get("promo")),
+                        "estado": "pendiente",
+                        "nota": "",
+                    })
+
+                eventos.append({
+                    "id": uuid.uuid4().hex,
+                    "nombre": nombre_evento,
+                    "fecha": fecha,
+                    "hora_inicio": hora_inicio,
+                    "hora_fin": hora_fin,
+                    "promociones": promociones_form,
+                    "staff": staff_rows,
+                    "creado_en": datetime.now().isoformat(timespec="seconds"),
+                })
+                eventos = normalizar_eventos_staff(eventos)
+                guardar_eventos_staff(eventos)
+
+                mes_post = fecha[:7]
+                dia_post = fecha
+                promos_post = promociones_form
+
+        elif accion == "editar_evento_staff":
+            event_id = _safe_text(request.form.get("event_id"))
+            ev = find_event(event_id)
+            if ev is not None:
+                nombre_evento = _safe_text(request.form.get("nombre_evento")) or ev.get("nombre", "Evento")
+                fecha = _safe_text(request.form.get("fecha")) or ev.get("fecha", "")
+                hora_inicio = _safe_text(request.form.get("hora_inicio"))
+                hora_fin = _safe_text(request.form.get("hora_fin"))
+                promociones_text = _safe_text(request.form.get("promociones_texto"))
+                promociones_edit = [p.strip() for p in promociones_text.split(",") if p.strip()]
+                staff_names = request.form.getlist("staff_name")
+                staff_estados = request.form.getlist("staff_estado")
+
+                ev["nombre"] = nombre_evento
+                ev["fecha"] = fecha
+                ev["hora_inicio"] = hora_inicio
+                ev["hora_fin"] = hora_fin
+                ev["promociones"] = promociones_edit
+
+                if staff_names and staff_estados:
+                    estado_por_staff = {}
+                    for staff_name, staff_estado in zip(staff_names, staff_estados):
+                        nombre_staff = _safe_text(staff_name)
+                        if not nombre_staff:
+                            continue
+                        estado_por_staff[nombre_staff] = _normalizar_estado_asistencia(staff_estado)
+
+                    for st in ev.get("staff", []):
+                        nombre_staff = _safe_text(st.get("nombre"))
+                        if nombre_staff in estado_por_staff:
+                            st["estado"] = estado_por_staff[nombre_staff]
+
+                guardar_eventos_staff(eventos)
+                mes_post = fecha[:7] if len(fecha) >= 7 else mes_post
+                dia_post = fecha or dia_post
+                promos_post = promociones_edit if promociones_edit else promos_post
+
+        elif accion == "eliminar_evento_staff":
+            event_id = _safe_text(request.form.get("event_id"))
+            prev_len = len(eventos)
+            eventos = [ev for ev in eventos if ev.get("id") != event_id]
+            if len(eventos) != prev_len:
+                guardar_eventos_staff(eventos)
+
+        elif accion == "agregar_staff_evento":
+            event_id = _safe_text(request.form.get("event_id"))
+            nombre_staff = _safe_text(request.form.get("staff_name"))
+            ev = find_event(event_id)
+            if ev is not None and nombre_staff:
+                exists = any(_safe_text(s.get("nombre")) == nombre_staff for s in ev.get("staff", []))
+                if not exists:
+                    person = info_map.get(nombre_staff, {})
+                    ev.setdefault("staff", []).append({
+                        "nombre": nombre_staff,
+                        "id": _safe_text(person.get("id")),
+                        "promo": _safe_text(person.get("promo")),
+                        "estado": "pendiente",
+                        "nota": "",
+                    })
+                    guardar_eventos_staff(eventos)
+
+        elif accion == "quitar_staff_evento":
+            event_id = _safe_text(request.form.get("event_id"))
+            staff_name = _safe_text(request.form.get("staff_name"))
+            ev = find_event(event_id)
+            if ev is not None and staff_name:
+                before = len(ev.get("staff", []))
+                ev["staff"] = [s for s in ev.get("staff", []) if _safe_text(s.get("nombre")) != staff_name]
+                if len(ev.get("staff", [])) != before:
+                    guardar_eventos_staff(eventos)
+
+        elif accion == "actualizar_asistencia":
+            event_id = _safe_text(request.form.get("event_id"))
+            staff_name = _safe_text(request.form.get("staff_name"))
+            estado = _normalizar_estado_asistencia(request.form.get("estado"))
+
+            updated = False
+            ev = find_event(event_id)
+            if ev is not None:
+                for st in ev.get("staff", []):
+                    if _safe_text(st.get("nombre")) == staff_name:
+                        st["estado"] = estado
+                        updated = True
+                        break
+            if updated:
+                guardar_eventos_staff(eventos)
+
+        params = [("mes", mes_post)]
+        if dia_post:
+            params.append(("dia", dia_post))
+        for promo in promos_post:
+            params.append(("promociones", promo))
+        return redirect(f"{url_for('staff')}?{urlencode(params)}")
+
+    eventos_mes = filtrar_eventos_staff(eventos, mes_actual, promociones_sel)
+    calendario, eventos_por_fecha = construir_calendario(mes_actual, eventos_mes)
+
+    if not dia_seleccionado:
+        dia_seleccionado = datetime.now().strftime("%Y-%m-%d")
+    if not dia_seleccionado.startswith(f"{mes_actual}-"):
+        dia_seleccionado = f"{mes_actual}-01"
+
+    eventos_del_dia = eventos_por_fecha.get(dia_seleccionado, [])
+    staff_catalogo = sorted(info_map.keys())
+    eventos_resumen = []
+    for ev in eventos_del_dia:
+        eventos_resumen.append({
+            "evento": ev,
+            "resumen": resumen_evento_staff(ev),
+            "asistieron": [s for s in ev.get("staff", []) if s.get("estado") == "asistio"],
+            "excusas": [s for s in ev.get("staff", []) if s.get("estado") == "excusa"],
+            "no_fueron": [s for s in ev.get("staff", []) if s.get("estado") == "no"],
+            "promociones_texto": ", ".join([str(p) for p in ev.get("promociones", []) if _safe_text(p)]),
+        })
+
+    return render_template(
+        "staff.html",
+        active_tab="staff",
+        horas=HORAS,
+        promociones=promociones,
+        promociones_sel=promociones_sel,
+        estudiantes_por_promo=estudiantes_por_promo,
+        mes_actual=mes_actual,
+        mes_prev=_shift_month(mes_actual, -1),
+        mes_next=_shift_month(mes_actual, 1),
+        dia_seleccionado=dia_seleccionado,
+        calendario=calendario,
+        eventos_resumen=eventos_resumen,
+        staff_catalogo=staff_catalogo,
     )
 
 
@@ -478,69 +963,6 @@ def api_horario():
         })
 
     return jsonify(res)
-
-
-@app.route('/crear_evento', methods=['POST'])
-def crear_evento():
-    estudiantes = request.form.getlist('estudiantes')
-    if not estudiantes:
-        return jsonify({'error': 'no hay estudiantes seleccionados'}), 400
-
-    nombre_evento = request.form.get('nombre_evento', '')
-    dia = request.form.get('dia', '')
-    fecha = request.form.get('fecha', '')
-    hora = request.form.get('hora', '')
-
-    # Convertir fecha de YYYY-MM-DD a formato amigable
-    fecha_formateada = ""
-    if fecha:
-        try:
-            dt = datetime.strptime(fecha, "%Y-%m-%d")
-            meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
-            fecha_formateada = f"{dt.day} de {meses[dt.month - 1]}"
-        except Exception:
-            fecha_formateada = fecha
-
-    dia_formateado = (dia.capitalize() + ", ") if dia else ""
-    dia_completo = f"{dia_formateado}{fecha_formateada}" if fecha_formateada else dia.capitalize()
-
-    # Formatear la hora: soporta "H:MM AM/PM - H:MM AM/PM" o valor simple "H:MM AM/PM"
-    if " - " in hora:
-        partes_hora = hora.split(" - ", 1)
-        hora_formateada = " - ".join(
-            p.strip().replace("AM", "am").replace("PM", "pm") for p in partes_hora
-        )
-    else:
-        hora_formateada = hora.strip().replace("AM", "am").replace("PM", "pm")
-
-    # Obtener ID de cada estudiante directamente del CSV local
-    df_local = cargar()
-    _info_map = construir_info_estudiantes(df_local)  # {nombre: {id, promo}}
-    id_map = {k: v["id"] for k, v in _info_map.items()}
-
-    filas = []
-    for est in estudiantes:
-        fila = {
-            'Día': dia_completo,
-            'Hora': hora_formateada,
-            'Becados': est,
-            'ID': id_map.get(est, ''),
-        }
-        filas.append(fila)
-
-    new_df = pd.DataFrame(filas)
-
-    # Generar Excel en memoria y devolverlo como descarga (no se edita/actualiza ningún archivo remoto)
-    out = BytesIO()
-    with pd.ExcelWriter(out, engine='openpyxl') as writer:
-        new_df.to_excel(writer, sheet_name=CLOUD_SHEET_EVENTS, index=False)
-    out.seek(0)
-    filename = f"eventos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-    # Usamos download_name (Flask >=2.0). Si tu versión no lo soporta, reemplaza por 'attachment_filename'.
-    return send_file(out,
-                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                     as_attachment=True,
-                     download_name=filename)
 
 
 if __name__ == "__main__":

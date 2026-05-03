@@ -1,0 +1,2650 @@
+{
+  "events": [
+    {
+      "id": "7fc8eb6d603b400792fb5e6ac1aadfb9",
+      "nombre": "LLAMADAS EMPLEABILIDAD",
+      "fecha": "2026-01-22",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2023",
+        "2024",
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Salma Nayeth Ardila Martínez",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Andrea Carolina Gutiérrez Mejía",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Carolina Andrea Barceló Rivera",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Cynthia Karina Torres Barraza",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Diana Marcela Gutiérrez Reales",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sophia Alejandra Rodas Vásquez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valentina Judith Rodríguez Tovar",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valentina Morales Velaides",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valeria Isabel Díaz Ramos",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valerie Santos Vargas",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leiri Laura Ortega Ortiz",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mariana Sofia Polo Capdevila",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Marianella Isabel Suarez Salazar",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Melid Sofia Montañez Rodriguez",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Jaramillo Polo",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sharon Vanessa Orozco Caballero",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "efa37021145843b09ef4dfe5315ae3ff",
+      "nombre": "INTEGRATE + STAFF AM",
+      "fecha": "2026-01-23",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Gabriel Arenas Quijano",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Isabella Sofia Solano Pavia",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leandro Aaron Mendoza Navarro",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Orellano Cabarcas",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sebastian David Barrios Barrios",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "a6c6b791a95b4280baf6bba221f015f8",
+      "nombre": "STAFF CAMARA Y SENADO LIBERAL PM",
+      "fecha": "2026-01-23",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2023",
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Juan David Peña Arias",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Vanessa Andrea Castillo Romero",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leandro Aaron Mendoza Navarro",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Luis Simon Mejia Vergara",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Maria del Rosario Navarrete Maestre",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Melid Sofia Montañez Rodriguez",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Miguel Angel Castro Zuñiga",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mishell Montenegro Reyes",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sofia Valentina Duarte Serrano",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "8ddf58498a054e16b5e2d10a28478991",
+      "nombre": "INTEGRATE + STAFF AM",
+      "fecha": "2026-01-27",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Gabriel Arenas Quijano",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Isabella Sofia Solano Pavia",
+          "id": "",
+          "promo": "2025",
+          "estado": "excusa",
+          "nota": "NO"
+        },
+        {
+          "nombre": "Leandro Aaron Mendoza Navarro",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Orellano Cabarcas",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sebastian David Barrios Barrios",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "e36a6859f837401d8eb0eb7153ff365b",
+      "nombre": "INTEGRATE + STAFF AM",
+      "fecha": "2026-01-29",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Gabriel Arenas Quijano",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Isabella Sofia Solano Pavia",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leandro Aaron Mendoza Navarro",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Orellano Cabarcas",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sebastian David Barrios Barrios",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "7b85d0bb89a34f62916603f459d5c006",
+      "nombre": "APOYO RECTORIA",
+      "fecha": "2026-01-30",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2023",
+        "2024",
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Alonso Emilio Pareja Rodríguez",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Diana Marcela Gutiérrez Reales",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sharon Juliana Agamez bravo",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sebastian David Barrios Barrios",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sofia Valentina Duarte Serrano",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "011280c70a5f4b6a880dc0d65c6cab6e",
+      "nombre": "APOYO RECTORIA",
+      "fecha": "2026-01-31",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2024",
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Sharon Juliana Agamez bravo",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sophia Alejandra Rodas Vásquez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valerie Sophia De Ávila Rojas",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Maria del Rosario Navarrete Maestre",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sharon Vanessa Orozco Caballero",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "0c86ab5709654102a13d32991de5c012",
+      "nombre": "APOYO RECTORIA",
+      "fecha": "2026-02-02",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2024",
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Valerie Santos Vargas",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Camila Andrea Sañudo Monsalve",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Luis Simon Mejia Vergara",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mariana Sofia Polo Capdevila",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sebastian David Barrios Barrios",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "468dcaa7819b46d6bc038d3f93fb7d3d",
+      "nombre": "INTEGRATE + STAFF AM",
+      "fecha": "2026-02-03",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Gabriel Arenas Quijano",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Isabella Sofia Solano Pavia",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leandro Aaron Mendoza Navarro",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Orellano Cabarcas",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sebastian David Barrios Barrios",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "244bbaf504a4479a9e98f70f3d055dfd",
+      "nombre": "INTEGRATE + STAFF (HASTA EL FINAL)",
+      "fecha": "2026-02-26",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Gabriel Arenas Quijano",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Isabella Sofia Solano Pavia",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Jesus David Estrada Machacon",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leandro Aaron Mendoza Navarro",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leiri Laura Ortega Ortiz",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Luis Simon Mejia Vergara",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mariana Casanova Mei",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Orellano Cabarcas",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sebastian David Barrios Barrios",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sofia Valentina Duarte Serrano",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "c7507037c1af47caacf4f9eb57494edd",
+      "nombre": "ORG GRAD.VENT",
+      "fecha": "2026-02-26",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2023",
+        "2024"
+      ],
+      "staff": [
+        {
+          "nombre": "Cristian Camilo Castiblanco Barón",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Vanessa Andrea Castillo Romero",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Angello Michaelle Zúñiga Olave",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "f99b38a10ce4487c83d9e85015c444f6",
+      "nombre": "APOYO EN CASA MAESTRO Y SOBRES L",
+      "fecha": "2026-02-27",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2023",
+        "2024",
+        "2025",
+        "2026"
+      ],
+      "staff": [
+        {
+          "nombre": "Cristian Camilo Castiblanco Barón",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Danna Martínez Tejada",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Emely Rueda Romero",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Juliana Andrea Jiménez Peñaloza",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Angello Michaelle Zúñiga Olave",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Carolina Andrea Barceló Rivera",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Cynthia Karina Torres Barraza",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Daniella Johana Arregui Rodríguez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Dariangel Fuenmayor Clavijo",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Diana Marcela Gutiérrez Reales",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Isaac Daniel Peña Perdomo",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Katiuska Saravia Pérez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sharon Juliana Agamez bravo",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sophia Alejandra Rodas Vásquez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valerie Gil Fragozo",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valerie Santos Vargas",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valerie Sophia De Ávila Rojas",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valery Mishel Iglesias Martínez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Camila Andrea Sañudo Monsalve",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Gabriel Arenas Quijano",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Isabella Sofia Solano Pavia",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Jesus David Estrada Machacon",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Laura Isabella Truyol Camacho",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leandro Aaron Mendoza Navarro",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leiri Laura Ortega Ortiz",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Luis Simon Mejia Vergara",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Maria del Rosario Navarrete Maestre",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Maria Sofia Ramos Alvarado",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mariana Casanova Mei",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mariana Sofia Polo Capdevila",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Melid Sofia Montañez Rodriguez",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Miguel Angel Castro Zuñiga",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mishell Montenegro Reyes",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Orellano Cabarcas",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sebastian David Barrios Barrios",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sharon Vanessa Orozco Caballero",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sofia Valentina Duarte Serrano",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Damian Alberto Torres Rodríguez",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Daniel Alexander Ospino Barrios",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Emmanuel González Ocampo",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Jaime David Sánchez Sánchez",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Liz Sofía Gómez Barraza",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Luis Felipe Herrera Madrid",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Thaliana María Cabarcas Solano",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Tiana Sofia Mendoza Cano",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "9acf751b3ba64f9aa9bd0746f9596ff3",
+      "nombre": "GRAD.VENT",
+      "fecha": "2026-02-27",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2023",
+        "2024",
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Ana María Díaz Murillo",
+          "id": "",
+          "promo": "2023",
+          "estado": "excusa",
+          "nota": "NO"
+        },
+        {
+          "nombre": "Ángel David Cárdenas Rodríguez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Orellano Cabarcas",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "d8e4885124594871980e0458948cfad4",
+      "nombre": "MBAQ 2026 (Jueves)",
+      "fecha": "2026-03-12",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2022",
+        "2023",
+        "2024",
+        "2025",
+        "2026"
+      ],
+      "staff": [
+        {
+          "nombre": "Camilo Andrés Rada Bolívar",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Daniela Alexandra Rúa Pérez",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sharik Gisell Galván Mosquera",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valentina Castro Amaris",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Cristian Camilo Castiblanco Barón",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Danna Martínez Tejada",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Dariana Esther Ramírez Orozco",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Emely Rueda Romero",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Juan David Peña Arias",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Kendry Maydeth Cortes Ortega",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "María José Aguilar Anillo",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "María Paz Acosta Orozco",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "María Paz García Gutiérrez",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Meel Gálvez Hernández",
+          "id": "",
+          "promo": "2023",
+          "estado": "excusa",
+          "nota": "NO"
+        },
+        {
+          "nombre": "Salma Nayeth Ardila Martínez",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valery Paola Guerrero Rangel",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Vanessa Andrea Castillo Romero",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Ángel David Cárdenas Rodríguez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Angello Michaelle Zúñiga Olave",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Cynthia Karina Torres Barraza",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Daniella Johana Arregui Rodríguez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Dariangel Fuenmayor Clavijo",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Fiorella Díaz Moran",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Juan David Meléndez Jiménez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Katiuska Saravia Pérez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Andrés Comas Durán",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valentina Morales Velaides",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valerie Gil Fragozo",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Gabriel Arenas Quijano",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Jesus David Estrada Machacon",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leandro Aaron Mendoza Navarro",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leiri Laura Ortega Ortiz",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Luis Simon Mejia Vergara",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Maria del Rosario Navarrete Maestre",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Maria Sofia Ramos Alvarado",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mariana Casanova Mei",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mariana Sofia Polo Capdevila",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Miguel Angel Castro Zuñiga",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mishell Montenegro Reyes",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sebastian David Barrios Barrios",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sharon Vanessa Orozco Caballero",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Damian Alberto Torres Rodríguez",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Daniel Alexander Ospino Barrios",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "f0e319375e6f4df494e4d564788a61ae",
+      "nombre": "Comunicaciones MBAQ",
+      "fecha": "2026-03-13",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2023",
+        "2024",
+        "2025",
+        "2026"
+      ],
+      "staff": [
+        {
+          "nombre": "Salma Nayeth Ardila Martínez",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valery Paola Guerrero Rangel",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Andrea Carolina Gutiérrez Mejía",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Angello Michaelle Zúñiga Olave",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Carolina Andrea Barceló Rivera",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Daniella Johana Arregui Rodríguez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "María José Cusba Blanco",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Andrés Comas Durán",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sophia Alejandra Rodas Vásquez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valeria Isabel Díaz Ramos",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valerie Gil Fragozo",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leandro Aaron Mendoza Navarro",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Jaramillo Polo",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Orellano Cabarcas",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sharon Vanessa Orozco Caballero",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Damian Alberto Torres Rodríguez",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Liz Sofía Gómez Barraza",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Oriana Manuela Tapias García",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "d1971f75ebb64b448fa7928532fa643c",
+      "nombre": "MBAQ 2026 (Viernes)",
+      "fecha": "2026-03-13",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2022",
+        "2023",
+        "2024",
+        "2025",
+        "2026"
+      ],
+      "staff": [
+        {
+          "nombre": "Andrea Carolina Fontalvo Padilla",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Ángel Enrique Pertuz Meza",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Camilo Andrés Rada Bolívar",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Daniela Alexandra Rúa Pérez",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Nayerith Alemán Padilla",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sharik Gisell Galván Mosquera",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valentina Castro Amaris",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Cristian Camilo Castiblanco Barón",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Danna Martínez Tejada",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Dariana Esther Ramírez Orozco",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Emely Rueda Romero",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Juan David Peña Arias",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "María Cecilia Arcieri Maldonado",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "María Paz Acosta Orozco",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "María Paz García Gutiérrez",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Andrea José Rapalino Acosta",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Ángel David Cárdenas Rodríguez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Angello Michaelle Zúñiga Olave",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Cynthia Karina Torres Barraza",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Dariangel Fuenmayor Clavijo",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Diana Marcela Gutiérrez Reales",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Fiorella Díaz Moran",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Juan David Meléndez Jiménez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sharon Juliana Agamez bravo",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valentina Judith Rodríguez Tovar",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valentina Morales Velaides",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valerie Santos Vargas",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Gabriel Arenas Quijano",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Jesus David Estrada Machacon",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leiri Laura Ortega Ortiz",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Maria Sofia Ramos Alvarado",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mariana Casanova Mei",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mariana Sofia Polo Capdevila",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Miguel Angel Castro Zuñiga",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mishell Montenegro Reyes",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Jaramillo Polo",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Orellano Cabarcas",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sebastian David Barrios Barrios",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Daniel Alexander Ospino Barrios",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Liz Sofía Gómez Barraza",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Luis Felipe Herrera Madrid",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Oriana Manuela Tapias García",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Samara Elena Vides Polanco",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "a1685dcdbb674e5f8fc5a8126f8c1205",
+      "nombre": "Comunicaciones MBAQ",
+      "fecha": "2026-03-14",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2023",
+        "2024",
+        "2025",
+        "2026"
+      ],
+      "staff": [
+        {
+          "nombre": "Salma Nayeth Ardila Martínez",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valery Paola Guerrero Rangel",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Andrea Carolina Gutiérrez Mejía",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Angello Michaelle Zúñiga Olave",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Carolina Andrea Barceló Rivera",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Daniella Johana Arregui Rodríguez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "María José Cusba Blanco",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Andrés Comas Durán",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sophia Alejandra Rodas Vásquez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valeria Isabel Díaz Ramos",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valerie Gil Fragozo",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leandro Aaron Mendoza Navarro",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Jaramillo Polo",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Orellano Cabarcas",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sharon Vanessa Orozco Caballero",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Damian Alberto Torres Rodríguez",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Liz Sofía Gómez Barraza",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Oriana Manuela Tapias García",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "35fd579c23224413a2978e69e00549e6",
+      "nombre": "MBAQ 2026 (Sábado)",
+      "fecha": "2026-03-14",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2022",
+        "2023",
+        "2024",
+        "2025",
+        "2026"
+      ],
+      "staff": [
+        {
+          "nombre": "Camilo Andrés Rada Bolívar",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Daniel David Ortega Rico",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Daniela Alexandra Rúa Pérez",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Edgar De Jesús López Charris",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Iverson Manuel Cassiani Torres",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Paula Andrea Cárdenas  Howard",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sharik Gisell Galván Mosquera",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valentina Castro Amaris",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valentino Martínez Rubio",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Zharick María Ucros Luengas",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Cristian Camilo Castiblanco Barón",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Danna Martínez Tejada",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Emely Rueda Romero",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Emily Alexia Imitola Martínez",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Juan David Peña Arias",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "María Cecilia Arcieri Maldonado",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "María José Aguilar Anillo",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "María Paz García Gutiérrez",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Meel Gálvez Hernández",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Vanessa Andrea Castillo Romero",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Andrea José Rapalino Acosta",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Dariangel Fuenmayor Clavijo",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Diana Marcela Gutiérrez Reales",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Fiorella Díaz Moran",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Juan David Meléndez Jiménez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Katiuska Saravia Pérez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valerie Santos Vargas",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valerie Sophia De Ávila Rojas",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valery Mishel Iglesias Martínez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Jesus David Estrada Machacon",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leiri Laura Ortega Ortiz",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Luis Simon Mejia Vergara",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Maria del Rosario Navarrete Maestre",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mariana Casanova Mei",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mariana Sofia Polo Capdevila",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Marianella Isabel Suarez Salazar",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Miguel Angel Castro Zuñiga",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Mishell Montenegro Reyes",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Damian Alberto Torres Rodríguez",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Daniel Alexander Ospino Barrios",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Liz Sofía Gómez Barraza",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Luis Felipe Herrera Madrid",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Samara Elena Vides Polanco",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "ebccaffad2dd4d4aab64b275f1f83b34",
+      "nombre": "FULLBRIGHT",
+      "fecha": "2026-03-16",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2026"
+      ],
+      "staff": [
+        {
+          "nombre": "Damian Alberto Torres Rodríguez",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Liz Sofía Gómez Barraza",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Oriana Manuela Tapias García",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "05bba3ccbe4f44e7ab5e4113e65ed249",
+      "nombre": "FULLBRIGHT",
+      "fecha": "2026-03-17",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2026"
+      ],
+      "staff": [
+        {
+          "nombre": "Isabella Pion Parra",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Jaime David Sánchez Sánchez",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Luna Zuluaga Giraldo",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "d67c8a9d59b34b84a1bd017e60b41bec",
+      "nombre": "FULLBRIGHT",
+      "fecha": "2026-03-19",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2025",
+        "2026"
+      ],
+      "staff": [
+        {
+          "nombre": "Melid Sofia Montañez Rodriguez",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Luis Felipe Herrera Madrid",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Samara Elena Vides Polanco",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "21e63f211c2247a18d09e073d1700542",
+      "nombre": "FULLBRIGHT",
+      "fecha": "2026-03-20",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2026"
+      ],
+      "staff": [
+        {
+          "nombre": "Eduardo Andrés Rodríguez Orejarena",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Isabella Olivares Olmos",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Thaliana María Cabarcas Solano",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "a565d94199d34549a51d4d367a01b959",
+      "nombre": "ORG. GRADOS VENT",
+      "fecha": "2026-03-26",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2024",
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Santiago Andrés Comas Durán",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Leandro Aaron Mendoza Navarro",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "11eb62374462412e9333daf8d4ee4d02",
+      "nombre": "GRADOS VENT",
+      "fecha": "2026-03-27",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Santiago Jaramillo Polo",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Santiago Orellano Cabarcas",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "d5935f95a41341dfbc63cd256b99f90f",
+      "nombre": "ZARZUELA",
+      "fecha": "2026-04-08",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2026"
+      ],
+      "staff": [
+        {
+          "nombre": "Isabella Olivares Olmos",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Juliana Andrea Guerra Guzmán",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "78aa0939f99b4ebd8804ecb5304c9158",
+      "nombre": "INT WEEK",
+      "fecha": "2026-04-22",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2023",
+        "2024",
+        "2025"
+      ],
+      "staff": [
+        {
+          "nombre": "Valery Paola Guerrero Rangel",
+          "id": "",
+          "promo": "2023",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Ángel David Cárdenas Rodríguez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Fiorella Díaz Moran",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Valentina Morales Velaides",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Gabriel Arenas Quijano",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Sharon Vanessa Orozco Caballero",
+          "id": "",
+          "promo": "2025",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "eace4b1723724b11a6d95581cfd3107d",
+      "nombre": "FORO LID CUC PALOMA",
+      "fecha": "2026-04-23",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2022",
+        "2024"
+      ],
+      "staff": [
+        {
+          "nombre": "Nayerith Alemán Padilla",
+          "id": "",
+          "promo": "2022",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Ángel David Cárdenas Rodríguez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Juan David Meléndez Jiménez",
+          "id": "",
+          "promo": "2024",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "9d1a953935424caeb936864ff8de1e5b",
+      "nombre": "GRAD. VENT",
+      "fecha": "2026-04-23",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2026"
+      ],
+      "staff": [
+        {
+          "nombre": "Danna Marcela Valencia Armenta",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Emmanuel González Ocampo",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Juliana Andrea Guerra Guzmán",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    },
+    {
+      "id": "183f0ece47c94158833607089ba36a09",
+      "nombre": "ORG GRAD. VENT",
+      "fecha": "2026-04-23",
+      "hora_inicio": "",
+      "hora_fin": "",
+      "promociones": [
+        "2026"
+      ],
+      "staff": [
+        {
+          "nombre": "Cristian Miguel González Beleño",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Damian Alberto Torres Rodríguez",
+          "id": "",
+          "promo": "2026",
+          "estado": "asistio",
+          "nota": ""
+        },
+        {
+          "nombre": "Dylan Alexander Peña Arango",
+          "id": "",
+          "promo": "2026",
+          "estado": "pendiente",
+          "nota": "NO"
+        }
+      ],
+      "creado_en": "2026-05-02T15:38:16"
+    }
+  ]
+}

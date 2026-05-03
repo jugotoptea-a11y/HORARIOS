@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eventos y asistencia staff</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #eef2f7;
+      display: flex;
+      justify-content: center;
+      padding: 24px 10px;
+    }
+    .container {
+      background: #fff;
+      width: 100%;
+      max-width: 1320px;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    }
+    .top-menu { display: flex; gap: 10px; margin-bottom: 18px; }
+    .menu-link {
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #eef2f7;
+      color: #1a1a2e;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #dfe6ef;
+    }
+    .menu-link.active { background: #1f5ad6; color: #fff; border-color: #1f5ad6; }
+    h2 { color: #1a1a2e; margin-bottom: 14px; }
+    h3 { color: #1a1a2e; margin-bottom: 10px; }
+    .layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .card {
+      border: 1px solid #e7edf5;
+      border-radius: 10px;
+      padding: 14px;
+      background: #fafcff;
+    }
+    label { display: block; margin-top: 10px; margin-bottom: 5px; font-weight: 600; color: #2f3b50; font-size: 13px; }
+    input[type="text"], input[type="date"], input[type="time"], select {
+      width: 100%;
+      border: 1px solid #cdd7e5;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 13px;
+      background: #fff;
+    }
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 7px;
+      padding: 9px 10px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #1f5ad6;
+      color: #fff;
+      margin-top: 10px;
+    }
+    .promos-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(110px, 1fr));
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .promos-grid label {
+      margin: 0;
+      padding: 6px 8px;
+      background: #fff;
+      border: 1px solid #e1e8f2;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 12px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .staff-list {
+      border: 1px solid #d8e0ec;
+      border-radius: 8px;
+      background: #fff;
+      max-height: 260px;
+      overflow: auto;
+      padding: 8px;
+    }
+    .staff-list label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin: 0;
+      padding: 5px;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 12px;
+    }
+    .staff-list label:hover { background: #f1f5fb; }
+    .month-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+    .month-toolbar a {
+      text-decoration: none;
+      color: #1f5ad6;
+      font-weight: 700;
+      border: 1px solid #d5deeb;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #fff;
+      font-size: 12px;
+    }
+    .calendar {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin-bottom: 14px;
+    }
+    .calendar th, .calendar td {
+      border: 1px solid #dbe3ef;
+      vertical-align: top;
+      height: 98px;
+      padding: 5px;
+      font-size: 12px;
+    }
+    .calendar th { background: #edf2fa; color: #334; }
+    .calendar td.out-month { background: #f6f8fc; color: #999; }
+    .calendar td.selected-day { outline: 2px solid #1f5ad6; outline-offset: -2px; }
+    .calendar a.day-link { text-decoration: none; color: inherit; display: block; height: 100%; }
+    .calendar-events {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .calendar-event-name {
+      font-size: 10px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #2f3b50;
+      background: #f4f7fc;
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+    .calendar-event-more {
+      font-size: 10px;
+      color: #5a6780;
+      font-weight: 700;
+    }
+    .badge {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .b-events { background: #ecf3ff; color: #204fa8; }
+    .b-asistio { background: #ecfdf3; color: #1b7e48; }
+    .b-excusa { background: #fff4ec; color: #a6521a; }
+    .b-no-fueron { background: #fff0f0; color: #a61f1f; }
+    .event-card {
+      border: 1px solid #dbe4f1;
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+      margin-bottom: 12px;
+    }
+    .event-meta { font-size: 12px; color: #4e5a70; margin: 4px 0 8px 0; }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .table th, .table td { border-bottom: 1px solid #ecf0f6; padding: 6px 4px; text-align: left; }
+    .inline-form { display: flex; gap: 6px; align-items: center; }
+    .inline-form select { min-width: 130px; margin: 0; }
+    .inline-form button { width: auto; margin: 0; padding: 6px 10px; font-size: 12px; }
+    .inline-form input[type="text"],
+    .inline-form input[type="date"],
+    .inline-form input[type="time"] {
+      margin: 0;
+    }
+    .actions-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .soft-btn {
+      width: auto;
+      margin: 0;
+      padding: 6px 10px;
+      font-size: 12px;
+      background: #52627d;
+    }
+    .danger-btn {
+      width: auto;
+      margin: 0;
+      padding: 6px 10px;
+      font-size: 12px;
+      background: #c43f3f;
+    }
+    .split {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .mini-box {
+      border: 1px solid #e6edf7;
+      border-radius: 8px;
+      background: #f9fbff;
+      padding: 8px;
+      font-size: 12px;
+    }
+    .mini-box h4 { margin-bottom: 6px; color: #2f3b50; font-size: 12px; }
+    .mini-box ul { margin-left: 16px; }
+    .muted { color: #6e7a8f; font-size: 12px; }
+    @media (max-width: 1024px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="top-menu">
+      <a class="menu-link {% if active_tab == 'disponibilidad' %}active{% endif %}" href="/">Disponibilidad</a>
+      <a class="menu-link {% if active_tab == 'staff' %}active{% endif %}" href="/staff">Eventos y asistencia staff</a>
+    </nav>
+
+    <h2>Gestion de eventos y asistencia de staff</h2>
+
+    <div class="layout">
+      <aside class="card">
+        <h3>Crear evento</h3>
+        <form method="POST" id="create-event-form">
+          <input type="hidden" name="accion" value="crear_evento_staff">
+          <input type="hidden" name="mes" value="{{ mes_actual }}">
+          <input type="hidden" name="dia" value="{{ dia_seleccionado }}">
+          {% for p in promociones_sel %}
+          <input type="hidden" name="promociones_contexto" value="{{ p }}">
+          {% endfor %}
+
+          <label>Nombre del evento</label>
+          <input type="text" name="nombre_evento" placeholder="Ej: Logistica feria" required>
+
+          <label>Fecha</label>
+          <input type="date" name="fecha" value="{{ dia_seleccionado }}" required>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div>
+              <label>Hora inicio</label>
+              <input type="time" name="hora_inicio">
+            </div>
+            <div>
+              <label>Hora fin</label>
+              <input type="time" name="hora_fin">
+            </div>
+          </div>
+
+          <label>Filtro por promocion</label>
+          <div class="promos-grid" id="promos-evento">
+            {% for p in promociones %}
+            <label><input type="checkbox" name="promociones_evento" value="{{ p }}" checked> {{ p }}</label>
+            {% endfor %}
+          </div>
+
+          <label>Buscar becado staff</label>
+          <input type="text" id="staff-search" placeholder="Filtrar por nombre o documento">
+
+          <label>Staff del evento</label>
+          <div class="staff-list" id="staff-list"></div>
+
+          <button type="submit">Guardar evento</button>
+        </form>
+      </aside>
+
+      <section class="card">
+        <div class="month-toolbar">
+          <a href="/staff?mes={{ mes_prev }}{% for p in promociones_sel %}&promociones={{ p }}{% endfor %}">&larr; Mes anterior</a>
+          <h3>{{ mes_actual }}</h3>
+          <a href="/staff?mes={{ mes_next }}{% for p in promociones_sel %}&promociones={{ p }}{% endfor %}">Mes siguiente &rarr;</a>
+        </div>
+
+        <form method="GET" style="margin-bottom:12px;">
+          <input type="hidden" name="mes" value="{{ mes_actual }}">
+          <label style="margin-top:0;">Filtrar calendario por promocion</label>
+          <div class="promos-grid">
+            {% for p in promociones %}
+            <label><input type="checkbox" name="promociones" value="{{ p }}" {% if p in promociones_sel or not promociones_sel %}checked{% endif %}> {{ p }}</label>
+            {% endfor %}
+          </div>
+          <button type="submit">Aplicar filtro</button>
+        </form>
+
+        <table class="calendar">
+          <thead>
+            <tr>
+              <th>Lunes</th>
+              <th>Martes</th>
+              <th>Miercoles</th>
+              <th>Jueves</th>
+              <th>Viernes</th>
+              <th>Sabado</th>
+              <th>Domingo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for week in calendario %}
+            <tr>
+              {% for day in week %}
+              <td class="{% if not day.in_month %}out-month{% endif %} {% if day.date == dia_seleccionado %}selected-day{% endif %}">
+                <a class="day-link" href="/staff?mes={{ mes_actual }}&dia={{ day.date }}{% for p in promociones_sel %}&promociones={{ p }}{% endfor %}">
+                  <div><strong>{{ day.day }}</strong></div>
+                  {% if day.event_count > 0 %}
+                  <span class="badge b-events">{{ day.event_count }} eventos</span>
+                  <div class="calendar-events">
+                    {% for event_name in day.event_names[:2] %}
+                    <div class="calendar-event-name" title="{{ event_name }}">{{ event_name }}</div>
+                    {% endfor %}
+                    {% if day.event_count > 2 %}
+                    <div class="calendar-event-more">+{{ day.event_count - 2 }} más</div>
+                    {% endif %}
+                  </div>
+                  <div>
+                    <span class="badge b-asistio">A: {{ day.resumen.asistio }}</span>
+                    <span class="badge b-excusa">E: {{ day.resumen.excusa }}</span>
+                    <span class="badge b-no-fueron">N: {{ day.resumen["no"] }}</span>
+                  </div>
+                  {% endif %}
+                </a>
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <h3>Detalle del dia {{ dia_seleccionado }}</h3>
+        {% if eventos_resumen %}
+          {% for block in eventos_resumen %}
+          <article class="event-card">
+            <h3>{{ block.evento.nombre }}</h3>
+            <p class="event-meta">
+              {{ block.evento.fecha }}
+              {% if block.evento.hora_inicio or block.evento.hora_fin %}
+                | {{ block.evento.hora_inicio }} - {{ block.evento.hora_fin }}
+              {% endif %}
+              | Promociones: {{ block.evento.promociones | join(', ') if block.evento.promociones else 'todas' }}
+            </p>
+            <p class="event-meta">Asistieron: {{ block.resumen.asistio }} | Excusas: {{ block.resumen.excusa }} | No fueron: {{ block.resumen["no"] }} | Pendientes: {{ block.resumen.pendiente }}</p>
+
+            <div class="actions-row">
+              <form method="POST" class="inline-form" id="edit-event-{{ block.evento.id }}">
+                <input type="hidden" name="accion" value="editar_evento_staff">
+                <input type="hidden" name="event_id" value="{{ block.evento.id }}">
+                <input type="hidden" name="mes" value="{{ mes_actual }}">
+                <input type="hidden" name="dia" value="{{ dia_seleccionado }}">
+                {% for p in promociones_sel %}
+                <input type="hidden" name="promociones_contexto" value="{{ p }}">
+                {% endfor %}
+                <input type="text" name="nombre_evento" value="{{ block.evento.nombre }}" placeholder="Nombre">
+                <input type="date" name="fecha" value="{{ block.evento.fecha }}">
+                <input type="time" name="hora_inicio" value="{{ block.evento.hora_inicio }}">
+                <input type="time" name="hora_fin" value="{{ block.evento.hora_fin }}">
+                <input type="text" name="promociones_texto" value="{{ block.promociones_texto }}" placeholder="Promociones (coma)">
+                <button type="submit" class="soft-btn">Guardar cambios</button>
+              </form>
+
+              <form method="POST" onsubmit="return confirm('¿Eliminar este evento?');">
+                <input type="hidden" name="accion" value="eliminar_evento_staff">
+                <input type="hidden" name="event_id" value="{{ block.evento.id }}">
+                <input type="hidden" name="mes" value="{{ mes_actual }}">
+                <input type="hidden" name="dia" value="{{ dia_seleccionado }}">
+                {% for p in promociones_sel %}
+                <input type="hidden" name="promociones_contexto" value="{{ p }}">
+                {% endfor %}
+                <button type="submit" class="danger-btn">Eliminar evento</button>
+              </form>
+            </div>
+
+            <form method="POST" class="inline-form" style="margin-bottom:8px;">
+              <input type="hidden" name="accion" value="agregar_staff_evento">
+              <input type="hidden" name="event_id" value="{{ block.evento.id }}">
+              <input type="hidden" name="mes" value="{{ mes_actual }}">
+              <input type="hidden" name="dia" value="{{ dia_seleccionado }}">
+              {% for p in promociones_sel %}
+              <input type="hidden" name="promociones_contexto" value="{{ p }}">
+              {% endfor %}
+              <input type="text" name="staff_name" list="staff-catalogo" placeholder="Agregar becado al evento">
+              <button type="submit" class="soft-btn">Agregar persona</button>
+            </form>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Documento</th>
+                  <th>Promocion</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for staff in block.evento.staff %}
+                <tr>
+                  <td>{{ staff.nombre }}</td>
+                  <td>{{ staff.id }}</td>
+                  <td>{{ staff.promo }}</td>
+                  <td>
+                    <input type="hidden" name="staff_name" value="{{ staff.nombre }}" form="edit-event-{{ block.evento.id }}">
+                    <select name="staff_estado" form="edit-event-{{ block.evento.id }}">
+                      <option value="pendiente" {% if staff.estado == 'pendiente' %}selected{% endif %}>pendiente</option>
+                      <option value="asistio" {% if staff.estado == 'asistio' %}selected{% endif %}>asistio</option>
+                      <option value="excusa" {% if staff.estado == 'excusa' %}selected{% endif %}>excusa</option>
+                      <option value="no" {% if staff.estado == 'no' %}selected{% endif %}>no</option>
+                    </select>
+                  </td>
+                  <td>
+                    <form method="POST" class="inline-form" onsubmit="return confirm('¿Quitar a esta persona del evento?');">
+                      <input type="hidden" name="accion" value="quitar_staff_evento">
+                      <input type="hidden" name="event_id" value="{{ block.evento.id }}">
+                      <input type="hidden" name="staff_name" value="{{ staff.nombre }}">
+                      <input type="hidden" name="mes" value="{{ mes_actual }}">
+                      <input type="hidden" name="dia" value="{{ dia_seleccionado }}">
+                      {% for p in promociones_sel %}
+                      <input type="hidden" name="promociones_contexto" value="{{ p }}">
+                      {% endfor %}
+                      <button type="submit" class="danger-btn">Quitar</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+                {% if not block.evento.staff %}
+                <tr>
+                  <td colspan="5"><span class="muted">Este evento aún no tiene personas asignadas.</span></td>
+                </tr>
+                {% endif %}
+              </tbody>
+            </table>
+
+            <div class="split">
+              <div class="mini-box">
+                <h4>Asistieron</h4>
+                {% if block.asistieron %}
+                <ul>
+                  {% for s in block.asistieron %}
+                  <li>{{ s.nombre }}</li>
+                  {% endfor %}
+                </ul>
+                {% else %}
+                <p class="muted">Sin registros</p>
+                {% endif %}
+              </div>
+              <div class="mini-box">
+                <h4>Presentaron excusa</h4>
+                {% if block.excusas %}
+                <ul>
+                  {% for s in block.excusas %}
+                  <li>{{ s.nombre }}</li>
+                  {% endfor %}
+                </ul>
+                {% else %}
+                <p class="muted">Sin registros</p>
+                {% endif %}
+              </div>
+              <div class="mini-box">
+                <h4>No fueron</h4>
+                {% if block.no_fueron %}
+                <ul>
+                  {% for s in block.no_fueron %}
+                  <li>{{ s.nombre }}</li>
+                  {% endfor %}
+                </ul>
+                {% else %}
+                <p class="muted">Sin registros</p>
+                {% endif %}
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+        {% else %}
+          <p class="muted">No hay eventos para este dia con los filtros actuales.</p>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+
+  <datalist id="staff-catalogo">
+    {% for nombre in staff_catalogo %}
+    <option value="{{ nombre }}"></option>
+    {% endfor %}
+  </datalist>
+
+  <script id="staff-data" type="application/json">{{ estudiantes_por_promo | tojson }}</script>
+  <script>
+    var staffByPromo = JSON.parse(document.getElementById('staff-data').textContent || '{}');
+    var selectedStaff = {};
+    var promosContainer = document.getElementById('promos-evento');
+    var staffList = document.getElementById('staff-list');
+    var searchInput = document.getElementById('staff-search');
+    var createEventForm = document.getElementById('create-event-form');
+
+    function selectedPromos() {
+      var checks = Array.from(promosContainer.querySelectorAll('input[type=\"checkbox\"]:checked'));
+      if (!checks.length) {
+        return Object.keys(staffByPromo);
+      }
+      return checks.map(function (cb) { return cb.value; });
+    }
+
+    function esc(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function syncSelectedStaffFromVisible() {
+      Array.from(staffList.querySelectorAll('input[type=\"checkbox\"][data-staff-name]')).forEach(function (cb) {
+        var staffName = cb.getAttribute('data-staff-name');
+        if (!staffName) return;
+        if (cb.checked) {
+          selectedStaff[staffName] = true;
+        } else {
+          delete selectedStaff[staffName];
+        }
+      });
+    }
+
+    function renderStaffList() {
+      syncSelectedStaffFromVisible();
+
+      var promos = selectedPromos();
+      var rows = [];
+      promos.forEach(function (promo) {
+        (staffByPromo[promo] || []).forEach(function (person) {
+          rows.push(person);
+        });
+      });
+
+      var unique = {};
+      rows.forEach(function (p) { unique[p.nombre] = p; });
+      rows = Object.keys(unique).map(function (k) { return unique[k]; }).sort(function (a, b) {
+        return a.nombre.localeCompare(b.nombre);
+      });
+
+      var term = (searchInput.value || '').toLowerCase().trim();
+      if (term) {
+        rows = rows.filter(function (p) {
+          return p.nombre.toLowerCase().indexOf(term) !== -1 || (p.id || '').toLowerCase().indexOf(term) !== -1;
+        });
+      }
+
+      if (!rows.length) {
+        staffList.innerHTML = '<p class=\"muted\">No hay becados para ese filtro.</p>';
+        return;
+      }
+
+      var html = '';
+      rows.forEach(function (p) {
+        var checked = selectedStaff[p.nombre] ? 'checked' : '';
+        html += '<label><input type=\"checkbox\" data-staff-name=\"' + esc(p.nombre) + '\" ' + checked + '> ' +
+                esc(p.nombre) + ' (' + esc(p.id || 'sin id') + ')</label>';
+      });
+      staffList.innerHTML = html;
+    }
+
+    staffList.addEventListener('change', function (ev) {
+      var target = ev.target;
+      if (!target || target.type !== 'checkbox') return;
+      var staffName = target.getAttribute('data-staff-name');
+      if (!staffName) return;
+      if (target.checked) {
+        selectedStaff[staffName] = true;
+      } else {
+        delete selectedStaff[staffName];
+      }
+    });
+
+    createEventForm.addEventListener('submit', function () {
+      syncSelectedStaffFromVisible();
+      Array.from(createEventForm.querySelectorAll('input[type=\"hidden\"][data-selected-staff=\"1\"]')).forEach(function (node) {
+        node.remove();
+      });
+      Object.keys(selectedStaff).forEach(function (staffName) {
+        var hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'staff';
+        hidden.value = staffName;
+        hidden.setAttribute('data-selected-staff', '1');
+        createEventForm.appendChild(hidden);
+      });
+    });
+
+    promosContainer.addEventListener('change', renderStaffList);
+    searchInput.addEventListener('input', renderStaffList);
+    renderStaffList();
+  </script>
+</body>
+</html>
