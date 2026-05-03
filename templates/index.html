@@ -5,6 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Buscador de disponibilidad</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
 
   <style>
     * {
@@ -554,17 +558,19 @@
     button.btn-antidisponibilidad:hover {
       box-shadow: 0 4px 12px rgba(232, 93, 117, 0.4);
     }
+
     /* ===== MODAL POPUP ===== */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.45);
+      background: rgba(0, 0, 0, 0.45);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 9999;
       padding: 14px;
     }
+
     .modal {
       background: white;
       border-radius: 10px;
@@ -573,9 +579,10 @@
       max-height: 75vh;
       overflow: auto;
       padding: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
       position: relative;
     }
+
     .modal-close {
       position: absolute;
       top: 6px;
@@ -585,27 +592,384 @@
       font-size: 20px;
       cursor: pointer;
     }
+
     .modal-table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 6px;
     }
-    .modal-table th, .modal-table td {
+
+    .modal-table th,
+    .modal-table td {
       padding: 6px 8px;
       border-bottom: 1px solid #f1f1f1;
       text-align: left;
       font-size: 13px;
     }
+
     .modal-empty {
       padding: 10px;
       color: #666;
     }
+
     /* Compactar estilos del timetable dentro del modal */
-    .modal .timetable { font-size: 12px; }
-    .modal .timetable th { padding: 8px 6px; }
-    .modal .timetable td { height: 22px; }
-    .modal .hora-col { width: 60px; font-size: 11px; }
-    .modal .clase-block { padding: 6px 6px; font-size: 11px; border-radius: 4px; }
+    .modal .timetable {
+      font-size: 12px;
+    }
+
+    .modal .timetable th {
+      padding: 8px 6px;
+    }
+
+    .modal .timetable td {
+      height: 22px;
+    }
+
+    .modal .hora-col {
+      width: 60px;
+      font-size: 11px;
+    }
+
+    .modal .clase-block {
+      padding: 6px 6px;
+      font-size: 11px;
+      border-radius: 4px;
+    }
+
+    /* ===== CUC visual refresh (Red Hat + red-forward palette) ===== */
+    :root {
+      --cuc-auburn: #A3161A;
+      --cuc-red-deep: #7B1113;
+      --cuc-satin-gold: #C9A227;
+      --cuc-gold: #FCD116;
+      --cuc-forest: #078930;
+      --cuc-gray-dark: #595959;
+      --cuc-gray-mid: #A5A5A5;
+      --cuc-gray-soft: #CCCCCC;
+      --cuc-paper: #ffffff;
+      --cuc-bg: #f3f3f3;
+      --cuc-border: rgba(89, 89, 89, 0.28);
+      --cuc-shadow: rgba(54, 23, 24, 0.2);
+    }
+
+    body {
+      font-family: 'Red Hat Display', 'Segoe UI', Arial, sans-serif;
+      color: #2d2d2d;
+      background:
+        radial-gradient(circle at 6% 5%, rgba(163, 22, 26, 0.2), transparent 35%),
+        radial-gradient(circle at 92% 2%, rgba(201, 162, 39, 0.2), transparent 30%),
+        linear-gradient(180deg, #f8f7f7 0%, var(--cuc-bg) 100%);
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+      accent-color: var(--cuc-auburn);
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 18px;
+      border: 1px solid rgba(163, 22, 26, 0.14);
+      box-shadow: 0 18px 50px var(--cuc-shadow);
+      backdrop-filter: blur(2px);
+    }
+
+    h2 {
+      font-family: 'Red Hat Display', 'Segoe UI', Arial, sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      color: var(--cuc-auburn);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    h3 {
+      font-weight: 800;
+      letter-spacing: 0.18px;
+      color: #4d0f11;
+    }
+
+    .top-menu {
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .menu-link {
+      background: #fbf7f7;
+      color: #6a4344;
+      border-color: rgba(163, 22, 26, 0.22);
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    .menu-link:hover {
+      border-color: var(--cuc-auburn);
+      color: var(--cuc-auburn);
+      transform: translateY(-1px);
+    }
+
+    .menu-link.active {
+      background: linear-gradient(145deg, var(--cuc-auburn), var(--cuc-red-deep));
+      border-color: var(--cuc-auburn);
+      color: var(--cuc-paper);
+      box-shadow: 0 10px 22px rgba(163, 22, 26, 0.28);
+    }
+
+    label {
+      color: #3f3f3f;
+      font-weight: 700;
+      letter-spacing: 0.1px;
+    }
+
+    small {
+      color: #6f6f6f;
+    }
+
+    select,
+    button {
+      border-radius: 10px;
+      font-family: inherit;
+    }
+
+    select {
+      border: 1px solid rgba(89, 89, 89, 0.26);
+      background: #fff;
+      color: #323232;
+    }
+
+    select:focus,
+    .dropdown-toggle:focus,
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    input[type="time"]:focus {
+      outline: 2px solid rgba(163, 22, 26, 0.2);
+      border-color: var(--cuc-auburn);
+    }
+
+    button {
+      border: none;
+      font-weight: 800;
+      letter-spacing: 0.18px;
+      background: linear-gradient(145deg, var(--cuc-auburn), var(--cuc-red-deep));
+      color: var(--cuc-paper);
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 9px 18px rgba(163, 22, 26, 0.32);
+    }
+
+    .dropdown-toggle,
+    .dropdown-menu {
+      border-color: rgba(163, 22, 26, 0.2);
+    }
+
+    .dropdown-menu label:hover {
+      background: #fdf1f2;
+    }
+
+    .dropdown-menu .est-todos-label:hover {
+      background: #fbe3e4;
+    }
+
+    .day-checkbox label {
+      background: #f5f5f5;
+      border-color: rgba(89, 89, 89, 0.2);
+    }
+
+    .day-checkbox input:checked+label {
+      background: linear-gradient(145deg, var(--cuc-auburn), var(--cuc-red-deep));
+      border-color: var(--cuc-auburn);
+      box-shadow: 0 8px 18px rgba(163, 22, 26, 0.28);
+      color: var(--cuc-paper);
+    }
+
+    .day-checkbox label::before,
+    .jornada-dia .numero {
+      background: linear-gradient(145deg, var(--cuc-gray-dark), #414141);
+    }
+
+    .jornada-row {
+      background: linear-gradient(180deg, #ffffff 0%, #faf7f7 100%);
+      border: 1px solid rgba(163, 22, 26, 0.14);
+      border-left: 4px solid var(--cuc-auburn);
+      border-radius: 12px;
+    }
+
+    .modo-toggle {
+      background: #f1efef;
+      box-shadow: inset 0 2px 6px rgba(89, 89, 89, 0.12);
+    }
+
+    .modo-toggle input[value="disponibilidad"]:checked+label {
+      background: linear-gradient(145deg, var(--cuc-auburn), var(--cuc-red-deep));
+      color: #fff;
+      box-shadow: 0 7px 16px rgba(163, 22, 26, 0.28);
+    }
+
+    .modo-toggle input[value="antidisponibilidad"]:checked+label {
+      background: linear-gradient(145deg, #595959, #3f3f3f);
+      color: #fff;
+      box-shadow: 0 7px 16px rgba(65, 65, 65, 0.24);
+    }
+
+    button.btn-antidisponibilidad {
+      background: linear-gradient(145deg, #5f5f5f, #404040);
+    }
+
+    button.btn-antidisponibilidad:hover {
+      box-shadow: 0 9px 18px rgba(65, 65, 65, 0.32);
+    }
+
+    .result {
+      border: 1px solid rgba(163, 22, 26, 0.2);
+      background: linear-gradient(180deg, #ffffff 0%, #fcf7f7 100%);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 24px rgba(163, 22, 26, 0.09);
+    }
+
+    .result-table th {
+      color: #5a2021 !important;
+      border-bottom-color: rgba(163, 22, 26, 0.2) !important;
+    }
+
+    .result-table tr:hover {
+      background: #fff7f7;
+    }
+
+    .result-table td.est-promo {
+      color: #8c6b12;
+      font-weight: 700;
+    }
+
+    .copy-tools .tool-btn,
+    .copy-btn {
+      background: linear-gradient(145deg, var(--cuc-auburn), #8f1317);
+    }
+
+    .horario-section {
+      margin-top: 34px;
+      border: 1px solid rgba(163, 22, 26, 0.2);
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #fcf7f7 100%);
+      padding: 18px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
+    }
+
+    .horario-section h3 {
+      margin-bottom: 10px;
+      color: #5c1719;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+    }
+
+    .horario-toggle-btn {
+      width: auto;
+      min-width: 240px;
+      margin: 0 0 12px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: linear-gradient(145deg, var(--cuc-auburn), var(--cuc-red-deep));
+    }
+
+    .horario-caption {
+      color: var(--cuc-gray-dark);
+      font-size: 0.86rem;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .horario-visual-content.is-collapsed {
+      display: none;
+    }
+
+    .timetable-shell {
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(163, 22, 26, 0.28);
+      background: #fff;
+      box-shadow: 0 12px 24px rgba(163, 22, 26, 0.13);
+    }
+
+    .timetable {
+      min-width: 760px;
+    }
+
+    .timetable th {
+      background: linear-gradient(145deg, var(--cuc-auburn), var(--cuc-red-deep));
+      border-color: #7e1c1f;
+      color: #fff;
+      letter-spacing: 0.22px;
+    }
+
+    .timetable td {
+      border-color: #e4d3d3;
+      background: #fff;
+    }
+
+    .timetable td.hora-col {
+      background: #f3f3f3;
+      color: #4d4d4d;
+      font-weight: 700;
+      border-right: 1px solid #d8c2c2;
+    }
+
+    .clase-block {
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.38);
+      box-shadow: 0 8px 20px rgba(42, 20, 20, 0.24);
+      padding: 7px;
+    }
+
+    .clase-block .codigo-clase {
+      background: rgba(0, 0, 0, 0.24);
+      border-radius: 4px;
+      margin-top: 5px;
+    }
+
+    .modal {
+      border: 1px solid rgba(163, 22, 26, 0.22);
+      box-shadow: 0 18px 35px rgba(56, 20, 21, 0.32);
+    }
+
+    .modal h3 {
+      color: var(--cuc-auburn);
+      text-transform: uppercase;
+    }
+
+    .modal-table th {
+      color: #5a2021;
+    }
+
+    @media (max-width: 880px) {
+      .container {
+        padding: 18px 14px;
+      }
+
+      h2 {
+        font-size: 1.35rem;
+      }
+
+      .days-selector {
+        grid-template-columns: repeat(auto-fit, minmax(98px, 1fr));
+      }
+
+      .jornada-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .horario-section {
+        padding: 14px 12px;
+      }
+
+      .horario-toggle-btn {
+        width: 100%;
+        min-width: 0;
+      }
+    }
   </style>
 </head>
 
@@ -626,7 +990,7 @@
           <input type="checkbox" name="promociones" value="TODAS" id="promo-all" onchange="toggleTodasPromociones()" {%
             if not sel_promociones %}checked{% endif %}>
           <label for="promo-all" data-order="{% if not sel_promociones %}1{% endif %}"
-            style="background:linear-gradient(135deg,#1a1a2e,#2a2a4e);color:white;border-color:#1a1a2e;">&#9733;
+            style="background:linear-gradient(145deg,#A3161A,#7B1113);color:white;border-color:#A3161A;">&#9733;
             Todas</label>
         </div>
         {% for promo in promociones %}
@@ -718,7 +1082,7 @@
     <script>
       var horasDisponibles = JSON.parse(document.getElementById('app-data-horas').textContent) || [];
       var diasSeleccionados = JSON.parse(document.getElementById('app-data-dias-sel').textContent) || [];
-      var selEstudiantes   = JSON.parse(document.getElementById('app-data-sel-est').textContent) || [];
+      var selEstudiantes = JSON.parse(document.getElementById('app-data-sel-est').textContent) || [];
       var todosEstudiantesPorPromo = JSON.parse(document.getElementById('app-data-por-promo').textContent);
       var disponiblesLista = JSON.parse(document.getElementById('app-data-disponibles').textContent) || [];
       var jornadasGuardadas = {};
@@ -1091,28 +1455,34 @@
         <thead>
           <tr>
             <th class="check-col"><input type="checkbox" id="check-all-rows"></th>
-            <th style="text-align:left; padding:4px 16px 4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">Nombre</th>
-            <th style="text-align:left; padding:4px 16px 4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">Documento</th>
-            <th style="text-align:left; padding:4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">Promoción</th>
-            <th style="text-align:left; padding:4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">Acción</th>
+            <th
+              style="text-align:left; padding:4px 16px 4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">
+              Nombre</th>
+            <th
+              style="text-align:left; padding:4px 16px 4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">
+              Documento</th>
+            <th
+              style="text-align:left; padding:4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">
+              Promoción</th>
+            <th
+              style="text-align:left; padding:4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">
+              Acción</th>
           </tr>
         </thead>
         <tbody>
-        {% for est in disponibles %}
-        <tr class="result-row" data-name="{{est}}" data-doc="{{disponibles_info[est]}}" data-promo="{{disponibles_promo.get(est, '')}}">
-          <td class="check-col"><input type="checkbox" class="row-select"></td>
-          <td class="est-nombre">{{est}}</td>
-          <td class="est-doc">{{disponibles_info[est]}}</td>
-          <td class="est-promo">{{disponibles_promo.get(est, '')}}</td>
-          <td>
-            <button type="button"
-                    class="copy-btn"
-                    data-name="{{est}}"
-                    data-doc="{{disponibles_info[est]}}"
-                    data-promo="{{disponibles_promo.get(est, '')}}">Copiar</button>
-          </td>
-        </tr>
-        {% endfor %}
+          {% for est in disponibles %}
+          <tr class="result-row" data-name="{{est}}" data-doc="{{disponibles_info[est]}}"
+            data-promo="{{disponibles_promo.get(est, '')}}">
+            <td class="check-col"><input type="checkbox" class="row-select"></td>
+            <td class="est-nombre">{{est}}</td>
+            <td class="est-doc">{{disponibles_info[est]}}</td>
+            <td class="est-promo">{{disponibles_promo.get(est, '')}}</td>
+            <td>
+              <button type="button" class="copy-btn" data-name="{{est}}" data-doc="{{disponibles_info[est]}}"
+                data-promo="{{disponibles_promo.get(est, '')}}">Copiar</button>
+            </td>
+          </tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>
@@ -1124,10 +1494,16 @@
       <h3>Horario semanal{% if sel_estudiante %} — {{sel_estudiante | join(', ') | truncate(60)}}{% else %} — Todos{%
         endif %}</h3>
 
+      <button type="button" class="horario-toggle-btn" id="horario-toggle-btn" aria-controls="horario-visual-content"
+        aria-expanded="true">Ocultar vista de horario</button>
+
       <script id="horario-data" type="application/json">{{ horario|tojson }}</script>
       <script id="dias-data" type="application/json">{{ dias_semana|tojson }}</script>
 
-      <div id="timetable-container" style="overflow-x:auto;"></div>
+      <div class="horario-visual-content" id="horario-visual-content">
+        <p class="horario-caption"></p>
+        <div id="timetable-container" class="timetable-shell"></div>
+      </div>
     </div>
     {% endif %}
 
@@ -1186,6 +1562,7 @@
       var table = container.querySelector('table');
       var tbody = table.querySelector('tbody');
       var rows = tbody.querySelectorAll('tr');
+      initHorarioToggle();
 
       // Place class blocks as absolutely positioned divs inside tbody
       horario.forEach(function (clase) {
@@ -1244,6 +1621,30 @@
         if (hh === 0) hh = 12;
         else if (hh > 12) hh -= 12;
         return hh + ':' + (mm < 10 ? '0' + mm : mm) + ' ' + ampm;
+      }
+
+      function initHorarioToggle() {
+        var btn = document.getElementById('horario-toggle-btn');
+        var content = document.getElementById('horario-visual-content');
+        if (!btn || !content) return;
+
+        var prefKey = 'horario_visual_visible';
+        var savedState = localStorage.getItem(prefKey);
+        var isVisible = savedState !== '0';
+
+        renderToggleState(isVisible);
+
+        btn.addEventListener('click', function () {
+          isVisible = !isVisible;
+          renderToggleState(isVisible);
+          localStorage.setItem(prefKey, isVisible ? '1' : '0');
+        });
+
+        function renderToggleState(visible) {
+          content.classList.toggle('is-collapsed', !visible);
+          btn.textContent = visible ? 'Ocultar vista de horario' : 'Mostrar vista de horario';
+          btn.setAttribute('aria-expanded', visible ? 'true' : 'false');
+        }
       }
     })();
   </script>
@@ -1400,109 +1801,109 @@
           renderModalTimetable(content, data);
         })
         .catch(function (err) {
-            console.error(err);
-            content.innerHTML = '<p class="modal-empty">Error al cargar el horario.</p>';
-          });
-      }
-
-      function renderModalTimetable(container, data) {
-        // Mostrar un timetable visual parecido al principal dentro del modal
-        var diasSemana = ['LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'];
-
-        // Mostrar siempre la semana completa (LUNES-SABADO)
-        var diasToShow = diasSemana.slice();
-
-        // Calcular rango de horas
-        var allStart = data.map(function (c) { return toMin24(c.inicio); });
-        var allEnd = data.map(function (c) { return toMin24(c.fin); });
-        var minMin = Math.min.apply(null, allStart);
-        var maxMin = Math.max.apply(null, allEnd);
-        var slotStart = Math.floor(minMin / 30) * 30;
-        var slotEnd = Math.ceil(maxMin / 30) * 30;
-        if (slotEnd <= slotStart) slotEnd = slotStart + 30;
-
-        // Build slots
-        var slots = [];
-        for (var m = slotStart; m < slotEnd; m += 30) slots.push(m);
-
-        var ROW_H = 22;
-
-        // Construir tabla
-        var html = '<table class="timetable"><thead><tr><th>HORAS</th>';
-        diasToShow.forEach(function (d) { html += '<th>' + d + '</th>'; });
-        html += '</tr></thead><tbody>';
-
-        slots.forEach(function (slotMin) {
-          html += '<tr>';
-          html += '<td class="hora-col">' + formatMin(slotMin) + '</td>';
-          diasToShow.forEach(function (d) { html += '<td></td>'; });
-          html += '</tr>';
+          console.error(err);
+          content.innerHTML = '<p class="modal-empty">Error al cargar el horario.</p>';
         });
+    }
 
-        html += '</tbody></table>';
-        container.innerHTML = html;
+    function renderModalTimetable(container, data) {
+      // Mostrar un timetable visual parecido al principal dentro del modal
+      var diasSemana = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
 
-        var table = container.querySelector('table');
-        var tbody = table.querySelector('tbody');
-        var rows = tbody.querySelectorAll('tr');
+      // Mostrar siempre la semana completa (LUNES-SABADO)
+      var diasToShow = diasSemana.slice();
 
-        // Añadir bloques
-        data.forEach(function (clase) {
-          var colIdx = diasToShow.indexOf(clase.dia);
-          if (colIdx === -1) return;
+      // Calcular rango de horas
+      var allStart = data.map(function (c) { return toMin24(c.inicio); });
+      var allEnd = data.map(function (c) { return toMin24(c.fin); });
+      var minMin = Math.min.apply(null, allStart);
+      var maxMin = Math.max.apply(null, allEnd);
+      var slotStart = Math.floor(minMin / 30) * 30;
+      var slotEnd = Math.ceil(maxMin / 30) * 30;
+      if (slotEnd <= slotStart) slotEnd = slotStart + 30;
 
-          var startMin = toMin24(clase.inicio);
-          var endMin = toMin24(clase.fin);
+      // Build slots
+      var slots = [];
+      for (var m = slotStart; m < slotEnd; m += 30) slots.push(m);
 
-          var startSlotIdx = Math.floor((startMin - slotStart) / 30);
-          var spanSlots = Math.ceil((endMin - startMin) / 30);
+      var ROW_H = 22;
 
-          if (startSlotIdx < 0 || startSlotIdx >= slots.length) return;
+      // Construir tabla
+      var html = '<table class="timetable"><thead><tr><th>HORAS</th>';
+      diasToShow.forEach(function (d) { html += '<th>' + d + '</th>'; });
+      html += '</tr></thead><tbody>';
 
-          var topOffset = startSlotIdx * ROW_H;
-          var blockHeight = Math.max(spanSlots * ROW_H, 40);
+      slots.forEach(function (slotMin) {
+        html += '<tr>';
+        html += '<td class="hora-col">' + formatMin(slotMin) + '</td>';
+        diasToShow.forEach(function (d) { html += '<td></td>'; });
+        html += '</tr>';
+      });
 
-          var firstRowTds = rows[0].querySelectorAll('td');
-          var horaColWidth = firstRowTds[0].offsetWidth;
-          var dataColWidth = firstRowTds[colIdx + 1].offsetWidth;
+      html += '</tbody></table>';
+      container.innerHTML = html;
 
-          var leftOffset = 0;
-          for (var i = 0; i <= colIdx; i++) {
-            if (i === 0) leftOffset += horaColWidth;
-            else leftOffset += dataColWidth;
-          }
+      var table = container.querySelector('table');
+      var tbody = table.querySelector('tbody');
+      var rows = tbody.querySelectorAll('tr');
 
-          var block = document.createElement('div');
-          block.className = 'clase-block';
-          block.style.background = clase.color || '#3a7afe';
-          block.style.height = blockHeight + 'px';
-          block.style.top = topOffset + 'px';
-          block.style.left = leftOffset + 'px';
-          block.style.width = (dataColWidth - 4) + 'px';
-          block.title = clase.materia + '\n' + formatMin(startMin) + ' - ' + formatMin(endMin);
+      // Añadir bloques
+      data.forEach(function (clase) {
+        var colIdx = diasToShow.indexOf(clase.dia);
+        if (colIdx === -1) return;
 
-          block.innerHTML = '<div class="materia-name">' + clase.materia + '</div>'
-            + '<div class="materia-time">' + formatMin(startMin) + ' - ' + formatMin(endMin) + '</div>'
-            + '<div class="codigo-clase">' + clase.codigo + '</div>';
+        var startMin = toMin24(clase.inicio);
+        var endMin = toMin24(clase.fin);
 
-          tbody.appendChild(block);
-        });
+        var startSlotIdx = Math.floor((startMin - slotStart) / 30);
+        var spanSlots = Math.ceil((endMin - startMin) / 30);
 
-        function toMin24(hhmm) {
-          if (!hhmm) return 0;
-          var p = hhmm.split(':');
-          return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
+        if (startSlotIdx < 0 || startSlotIdx >= slots.length) return;
+
+        var topOffset = startSlotIdx * ROW_H;
+        var blockHeight = Math.max(spanSlots * ROW_H, 40);
+
+        var firstRowTds = rows[0].querySelectorAll('td');
+        var horaColWidth = firstRowTds[0].offsetWidth;
+        var dataColWidth = firstRowTds[colIdx + 1].offsetWidth;
+
+        var leftOffset = 0;
+        for (var i = 0; i <= colIdx; i++) {
+          if (i === 0) leftOffset += horaColWidth;
+          else leftOffset += dataColWidth;
         }
 
-        function formatMin(m) {
-          var hh = Math.floor(m / 60);
-          var mm = m % 60;
-          var ampm = hh >= 12 ? 'pm' : 'am';
-          if (hh === 0) hh = 12;
-          else if (hh > 12) hh -= 12;
-          return hh + ':' + (mm < 10 ? '0' + mm : mm) + ' ' + ampm;
-        }
+        var block = document.createElement('div');
+        block.className = 'clase-block';
+        block.style.background = clase.color || '#3a7afe';
+        block.style.height = blockHeight + 'px';
+        block.style.top = topOffset + 'px';
+        block.style.left = leftOffset + 'px';
+        block.style.width = (dataColWidth - 4) + 'px';
+        block.title = clase.materia + '\n' + formatMin(startMin) + ' - ' + formatMin(endMin);
+
+        block.innerHTML = '<div class="materia-name">' + clase.materia + '</div>'
+          + '<div class="materia-time">' + formatMin(startMin) + ' - ' + formatMin(endMin) + '</div>'
+          + '<div class="codigo-clase">' + clase.codigo + '</div>';
+
+        tbody.appendChild(block);
+      });
+
+      function toMin24(hhmm) {
+        if (!hhmm) return 0;
+        var p = hhmm.split(':');
+        return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
       }
+
+      function formatMin(m) {
+        var hh = Math.floor(m / 60);
+        var mm = m % 60;
+        var ampm = hh >= 12 ? 'pm' : 'am';
+        if (hh === 0) hh = 12;
+        else if (hh > 12) hh -= 12;
+        return hh + ':' + (mm < 10 ? '0' + mm : mm) + ' ' + ampm;
+      }
+    }
 
     function format24To12(hhmm) {
       if (!hhmm) return '';

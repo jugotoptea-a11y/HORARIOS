@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Eventos y asistencia staff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -248,6 +251,334 @@
     .mini-box h4 { margin-bottom: 6px; color: #2f3b50; font-size: 12px; }
     .mini-box ul { margin-left: 16px; }
     .muted { color: #6e7a8f; font-size: 12px; }
+
+    /* ===== CUC red system ===== */
+    :root {
+      --cuc-auburn: #A3161A;
+      --cuc-red-deep: #7B1113;
+      --cuc-satin-gold: #C9A227;
+      --cuc-gold: #FCD116;
+      --cuc-forest: #078930;
+      --cuc-gray-dark: #595959;
+      --cuc-gray-mid: #A5A5A5;
+      --cuc-gray-soft: #CCCCCC;
+      --cuc-paper: #ffffff;
+      --cuc-bg: #f3f3f3;
+    }
+
+    body {
+      font-family: 'Red Hat Display', 'Segoe UI', Arial, sans-serif;
+      color: #2f2f2f;
+      background:
+        radial-gradient(circle at 5% 5%, rgba(163, 22, 26, 0.22), transparent 34%),
+        radial-gradient(circle at 96% 0, rgba(201, 162, 39, 0.18), transparent 30%),
+        linear-gradient(180deg, #f9f7f7 0%, var(--cuc-bg) 100%);
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+      accent-color: var(--cuc-auburn);
+    }
+
+    .container {
+      border-radius: 18px;
+      border: 1px solid rgba(163, 22, 26, 0.14);
+      box-shadow: 0 18px 45px rgba(58, 21, 22, 0.2);
+      background: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(2px);
+    }
+
+    h2, h3 {
+      color: #5a1618;
+      letter-spacing: 0.2px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .top-menu {
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .menu-link {
+      background: #fbf7f7;
+      border-color: rgba(163, 22, 26, 0.22);
+      color: #6d4344;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    .menu-link:hover {
+      color: var(--cuc-auburn);
+      border-color: var(--cuc-auburn);
+      transform: translateY(-1px);
+    }
+
+    .menu-link.active {
+      background: linear-gradient(145deg, var(--cuc-auburn), var(--cuc-red-deep));
+      border-color: var(--cuc-auburn);
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(163, 22, 26, 0.28);
+    }
+
+    .download-link {
+      border-color: rgba(163, 22, 26, 0.24);
+      background: #fff6f6;
+      color: var(--cuc-auburn);
+    }
+
+    .layout {
+      gap: 18px;
+    }
+
+    .card,
+    .event-card,
+    .mini-box {
+      border-radius: 14px;
+      border-color: rgba(163, 22, 26, 0.16);
+      box-shadow: 0 8px 18px rgba(163, 22, 26, 0.08);
+    }
+
+    .card {
+      background: linear-gradient(180deg, #fff 0%, #fcf6f6 100%);
+    }
+
+    label {
+      color: #3f3f3f;
+      font-weight: 700;
+      letter-spacing: 0.1px;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="time"],
+    select {
+      border-radius: 10px;
+      border-color: rgba(89, 89, 89, 0.28);
+      font-family: inherit;
+    }
+
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    input[type="time"]:focus,
+    select:focus {
+      outline: 2px solid rgba(163, 22, 26, 0.2);
+      border-color: var(--cuc-auburn);
+    }
+
+    button {
+      border-radius: 10px;
+      font-family: inherit;
+      font-weight: 800;
+      letter-spacing: 0.16px;
+      background: linear-gradient(145deg, var(--cuc-auburn), var(--cuc-red-deep));
+      color: #fff;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(163, 22, 26, 0.28);
+    }
+
+    .soft-btn {
+      background: linear-gradient(145deg, #6d6d6d, #505050);
+    }
+
+    .danger-btn {
+      background: linear-gradient(145deg, var(--cuc-auburn), #8f1317);
+    }
+
+    .promos-grid label {
+      border-color: rgba(163, 22, 26, 0.18);
+      background: #fff;
+    }
+
+    .staff-list {
+      border-color: rgba(163, 22, 26, 0.2);
+      background: #fff;
+    }
+
+    .staff-list label:hover {
+      background: #fff0f0;
+    }
+
+    .month-toolbar a {
+      color: var(--cuc-auburn);
+      border-color: rgba(163, 22, 26, 0.24);
+      background: #fff8f8;
+    }
+
+    .calendar th {
+      background: linear-gradient(145deg, var(--cuc-auburn), var(--cuc-red-deep));
+      color: #fff;
+      border-color: #8f2225;
+    }
+
+    .calendar td {
+      border-color: #ead4d4;
+      background: #fff;
+    }
+
+    .calendar td.out-month {
+      background: #f4f0f0;
+      color: #9e9e9e;
+    }
+
+    .calendar td.selected-day {
+      outline: 2px solid var(--cuc-auburn);
+      box-shadow: inset 0 0 0 2px rgba(163, 22, 26, 0.14);
+    }
+
+    .calendar-event-name {
+      color: #4d2526;
+      background: #ffe8e8;
+    }
+
+    .calendar-event-more {
+      color: #8b4344;
+    }
+
+    .badge {
+      font-weight: 800;
+    }
+
+    .b-events {
+      background: #fdeced;
+      color: #7f1b1e;
+    }
+
+    .b-asistio {
+      background: #e8f7ef;
+      color: #0f7138;
+    }
+
+    .b-excusa {
+      background: #fff7e1;
+      color: #8d6a13;
+    }
+
+    .b-no-fueron {
+      background: #ffe8e8;
+      color: #951a1d;
+    }
+
+    .event-card {
+      background: linear-gradient(180deg, #fff 0%, #fdf7f7 100%);
+      border-color: rgba(163, 22, 26, 0.2);
+      padding: 12px;
+    }
+
+    .event-meta,
+    .muted {
+      color: #5f5f5f;
+    }
+
+    .table th {
+      color: #5a2021;
+      border-bottom-color: rgba(163, 22, 26, 0.2);
+    }
+
+    .table td {
+      border-bottom-color: #ecdcdc;
+    }
+
+    .table tr:hover td {
+      background: #fff7f7;
+    }
+
+    .mini-box {
+      background: linear-gradient(180deg, #fff 0%, #faf2f2 100%);
+    }
+
+    .mini-box h4 {
+      color: #5a2021;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .event-list-wrap {
+      margin-top: 8px;
+    }
+
+    .event-list-wrap.is-collapsed {
+      display: none;
+    }
+
+    .collapse-toggle-btn {
+      width: auto;
+      margin: 0 0 10px;
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .resumen-dia-wrap {
+      margin: 8px 0 14px;
+      border: 1px solid rgba(163, 22, 26, 0.18);
+      border-radius: 12px;
+      background: linear-gradient(180deg, #fff 0%, #fdf5f5 100%);
+      padding: 10px;
+    }
+
+    .resumen-dia-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #6a191b;
+      margin-bottom: 8px;
+      letter-spacing: 0.2px;
+    }
+
+    .resumen-dia-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 8px;
+    }
+
+    .resumen-dia-item {
+      border: 1px solid #edd8d8;
+      border-radius: 10px;
+      background: #fff;
+      padding: 8px 9px;
+      font-size: 12px;
+    }
+
+    .resumen-dia-item strong {
+      display: block;
+      color: #5b1b1d;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .resumen-dia-stats {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .resumen-dia-stats span {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    .st-a {
+      background: #e8f7ef;
+      color: #0f7138;
+    }
+
+    .st-e {
+      background: #fff7e1;
+      color: #8d6a13;
+    }
+
+    .st-n {
+      background: #ffe8e8;
+      color: #951a1d;
+    }
+
     @media (max-width: 1024px) {
       .layout { grid-template-columns: 1fr; }
     }
@@ -372,6 +703,25 @@
         </table>
 
         <h3>Detalle del dia {{ dia_seleccionado }}</h3>
+        <div class="resumen-dia-wrap">
+          <div class="resumen-dia-title">Recuento por promoción (asistencia del día)</div>
+          {% if resumen_promocion_items %}
+          <div class="resumen-dia-grid">
+            {% for item in resumen_promocion_items %}
+            <div class="resumen-dia-item">
+              <strong>Promoción {{ item.promo }}</strong>
+              <div class="resumen-dia-stats">
+                <span class="st-a">Asistió: {{ item.asistio }}</span>
+                <span class="st-e">Excusa: {{ item.excusa }}</span>
+                <span class="st-n">No fue: {{ item.no }}</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="muted">No hay registros de asistencia para mostrar en este día.</p>
+          {% endif %}
+        </div>
         {% if eventos_resumen %}
           {% for block in eventos_resumen %}
           <article class="event-card">
@@ -426,6 +776,9 @@
               <button type="submit" class="soft-btn">Agregar persona</button>
             </form>
 
+            <button type="button" class="soft-btn collapse-toggle-btn" onclick="toggleDetalleEvento('{{ block.evento.id }}', this)">Contraer configuracion</button>
+
+            <div class="event-list-wrap" id="event-list-{{ block.evento.id }}">
             <table class="table">
               <thead>
                 <tr>
@@ -473,6 +826,7 @@
                 {% endif %}
               </tbody>
             </table>
+            </div>
 
             <div class="split">
               <div class="mini-box">
@@ -535,6 +889,13 @@
     var staffList = document.getElementById('staff-list');
     var searchInput = document.getElementById('staff-search');
     var createEventForm = document.getElementById('create-event-form');
+
+    function toggleDetalleEvento(eventId, btn) {
+      var wrap = document.getElementById('event-list-' + eventId);
+      if (!wrap || !btn) return;
+      var collapsed = wrap.classList.toggle('is-collapsed');
+      btn.textContent = collapsed ? 'Expandir configuracion' : 'Contraer configuracion';
+    }
 
     function selectedPromos() {
       var checks = Array.from(promosContainer.querySelectorAll('input[type=\"checkbox\"]:checked'));

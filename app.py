@@ -29,6 +29,11 @@ STAFF_EVENTS_JSON_LEGACY = os.path.join(BASE_DIR, "staff_eventos.json")
 def _build_database_uri():
     raw = (os.environ.get("DATABASE_URL") or "").strip()
     if not raw:
+        if (os.environ.get("RENDER") or "").lower() == "true":
+            raise RuntimeError(
+                "DATABASE_URL es obligatorio en Render para evitar guardar datos "
+                "en SQLite efimero."
+            )
         return f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}"
     if raw.startswith("postgres://"):
         return raw.replace("postgres://", "postgresql+psycopg://", 1)
@@ -1023,16 +1028,47 @@ def staff():
 
     eventos_del_dia = eventos_por_fecha.get(dia_seleccionado, [])
     staff_catalogo = sorted(info_map.keys())
+    info_map_lower = {str(k).strip().lower(): v for k, v in info_map.items()}
     eventos_resumen = []
+    resumen_promocion = {}
+
     for ev in eventos_del_dia:
+        staff_rows = []
+        for s in ev.get("staff", []):
+            nombre_staff = _safe_text(s.get("nombre"))
+            maestro = info_map.get(nombre_staff) or info_map_lower.get(nombre_staff.lower(), {})
+            staff_id = _safe_text(s.get("id")) or _safe_text(maestro.get("id"))
+            staff_promo = _safe_text(s.get("promo")) or _safe_text(maestro.get("promo"))
+            estado = _normalizar_estado_asistencia(s.get("estado"))
+
+            staff_item = {
+                **s,
+                "nombre": nombre_staff,
+                "id": staff_id,
+                "promo": staff_promo,
+                "estado": estado,
+            }
+            staff_rows.append(staff_item)
+
+            if estado in {"asistio", "excusa", "no"}:
+                promo_key = staff_promo or "Sin promoción"
+                if promo_key not in resumen_promocion:
+                    resumen_promocion[promo_key] = {"asistio": 0, "excusa": 0, "no": 0}
+                resumen_promocion[promo_key][estado] += 1
+
         eventos_resumen.append({
-            "evento": ev,
-            "resumen": resumen_evento_staff(ev),
-            "asistieron": [s for s in ev.get("staff", []) if s.get("estado") == "asistio"],
-            "excusas": [s for s in ev.get("staff", []) if s.get("estado") == "excusa"],
-            "no_fueron": [s for s in ev.get("staff", []) if s.get("estado") == "no"],
+            "evento": {**ev, "staff": staff_rows},
+            "resumen": resumen_evento_staff({**ev, "staff": staff_rows}),
+            "asistieron": [s for s in staff_rows if s.get("estado") == "asistio"],
+            "excusas": [s for s in staff_rows if s.get("estado") == "excusa"],
+            "no_fueron": [s for s in staff_rows if s.get("estado") == "no"],
             "promociones_texto": ", ".join([str(p) for p in ev.get("promociones", []) if _safe_text(p)]),
         })
+
+    resumen_promocion_items = sorted(
+        [{"promo": k, **v} for k, v in resumen_promocion.items()],
+        key=lambda x: x["promo"],
+    )
 
     return render_template(
         "staff.html",
@@ -1047,6 +1083,7 @@ def staff():
         dia_seleccionado=dia_seleccionado,
         calendario=calendario,
         eventos_resumen=eventos_resumen,
+        resumen_promocion_items=resumen_promocion_items,
         staff_catalogo=staff_catalogo,
     )
 
