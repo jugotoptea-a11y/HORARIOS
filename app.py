@@ -5,7 +5,8 @@ import calendar
 import requests
 from io import BytesIO
 from urllib.parse import urlencode
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file
+from flask_sqlalchemy import SQLAlchemy
 import pandas as pd
 from datetime import datetime, timedelta
 from threading import Lock
@@ -23,6 +24,69 @@ CLOUD_SHEET_GENERAL = os.environ.get("CLOUD_SHEET_GENERAL", "General")
 CLOUD_SHEET_EVENTS = os.environ.get("CLOUD_SHEET_EVENTS", "STAFF EVENTOS 2026")
 STAFF_EVENTS_CSV = os.path.join(BASE_DIR, "staff_eventos.csv")
 STAFF_EVENTS_JSON_LEGACY = os.path.join(BASE_DIR, "staff_eventos.json")
+
+
+def _build_database_uri():
+    raw = (os.environ.get("DATABASE_URL") or "").strip()
+    if not raw:
+        return f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}"
+    if raw.startswith("postgres://"):
+        return raw.replace("postgres://", "postgresql+psycopg://", 1)
+    if raw.startswith("postgresql://"):
+        return raw.replace("postgresql://", "postgresql+psycopg://", 1)
+    return raw
+
+
+app.config["SQLALCHEMY_DATABASE_URI"] = _build_database_uri()
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db = SQLAlchemy(app)
+
+
+class StaffEvent(db.Model):
+    __tablename__ = "staff_events"
+
+    id = db.Column(db.String(64), primary_key=True)
+    nombre = db.Column(db.String(255), nullable=False, default="Evento sin nombre")
+    fecha = db.Column(db.String(10), nullable=False, index=True)
+    hora_inicio = db.Column(db.String(8), nullable=True, default="")
+    hora_fin = db.Column(db.String(8), nullable=True, default="")
+    promociones = db.Column(db.Text, nullable=False, default="")
+    creado_en = db.Column(db.String(32), nullable=True, default="")
+    staff = db.relationship(
+        "StaffEventMember",
+        backref="event",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+
+class StaffEventMember(db.Model):
+    __tablename__ = "staff_event_members"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    event_id = db.Column(
+        db.String(64),
+        db.ForeignKey("staff_events.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    nombre = db.Column(db.String(255), nullable=False)
+    staff_id_value = db.Column("staff_id", db.String(64), nullable=True, default="")
+    promo = db.Column(db.String(64), nullable=True, default="")
+    estado = db.Column(db.String(16), nullable=False, default="pendiente")
+    nota = db.Column(db.Text, nullable=True, default="")
+
+
+_staff_tables_ready = False
+
+
+def ensure_staff_tables():
+    global _staff_tables_ready
+    if _staff_tables_ready:
+        return
+    db.create_all()
+    _staff_tables_ready = True
+
 
 # Cache para evitar recargar CSV en cada petición
 _cached_df = None
@@ -422,52 +486,108 @@ def _filas_csv_a_eventos(df_csv):
     return events
 
 
-def _migrar_json_legacy_a_csv_si_aplica():
+def _leer_eventos_legacy_en_disco():
     if os.path.exists(STAFF_EVENTS_CSV):
+        try:
+            df_csv = pd.read_csv(STAFF_EVENTS_CSV, dtype=str, keep_default_na=False)
+            return _filas_csv_a_eventos(df_csv)
+        except Exception as e:
+            app.logger.warning("No se pudo leer %s: %s", STAFF_EVENTS_CSV, e)
+
+    if os.path.exists(STAFF_EVENTS_JSON_LEGACY):
+        try:
+            with open(STAFF_EVENTS_JSON_LEGACY, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+            events = payload.get("events", []) if isinstance(payload, dict) else []
+            return normalizar_eventos_staff(events)
+        except Exception as e:
+            app.logger.warning("No se pudo leer %s: %s", STAFF_EVENTS_JSON_LEGACY, e)
+
+    return []
+
+
+def _event_model_to_dict(ev_model):
+    staff_rows = sorted(ev_model.staff, key=lambda s: (s.nombre or "").lower())
+    return {
+        "id": _safe_text(ev_model.id),
+        "nombre": _safe_text(ev_model.nombre) or "Evento sin nombre",
+        "fecha": _safe_text(ev_model.fecha),
+        "hora_inicio": _safe_text(ev_model.hora_inicio),
+        "hora_fin": _safe_text(ev_model.hora_fin),
+        "promociones": _split_promociones(ev_model.promociones),
+        "staff": [
+            {
+                "nombre": _safe_text(st.nombre),
+                "id": _safe_text(st.staff_id_value),
+                "promo": _safe_text(st.promo),
+                "estado": _normalizar_estado_asistencia(st.estado),
+                "nota": _safe_text(st.nota),
+            }
+            for st in staff_rows
+            if _safe_text(st.nombre)
+        ],
+        "creado_en": _safe_text(ev_model.creado_en),
+    }
+
+
+def _migrar_legacy_a_db_si_aplica():
+    ensure_staff_tables()
+    if StaffEvent.query.first() is not None:
         return
-    if not os.path.exists(STAFF_EVENTS_JSON_LEGACY):
-        return
-    try:
-        with open(STAFF_EVENTS_JSON_LEGACY, "r", encoding="utf-8") as f:
-            payload = json.load(f)
-        events = payload.get("events", []) if isinstance(payload, dict) else []
-        events = normalizar_eventos_staff(events)
-        guardar_eventos_staff(events)
-    except Exception as e:
-        app.logger.warning("No se pudo migrar JSON legacy a CSV: %s", e)
+    legacy_events = _leer_eventos_legacy_en_disco()
+    if legacy_events:
+        guardar_eventos_staff(legacy_events)
+        app.logger.info("Migrados %s eventos legacy a base de datos.", len(legacy_events))
 
 
 def cargar_eventos_staff():
-    _migrar_json_legacy_a_csv_si_aplica()
-    if not os.path.exists(STAFF_EVENTS_CSV):
-        return []
-    try:
-        df_csv = pd.read_csv(STAFF_EVENTS_CSV, dtype=str, keep_default_na=False)
-        return _filas_csv_a_eventos(df_csv)
-    except Exception as e:
-        app.logger.warning("No se pudo leer %s: %s", STAFF_EVENTS_CSV, e)
-        return []
+    ensure_staff_tables()
+    _migrar_legacy_a_db_si_aplica()
+    rows = StaffEvent.query.order_by(StaffEvent.fecha, StaffEvent.hora_inicio, StaffEvent.nombre).all()
+    return [_event_model_to_dict(ev) for ev in rows]
 
 
 def guardar_eventos_staff(events):
+    ensure_staff_tables()
     events = normalizar_eventos_staff(events)
-    filas = _eventos_a_filas_csv(events)
-    cols = [
-        "event_id",
-        "nombre",
-        "fecha",
-        "hora_inicio",
-        "hora_fin",
-        "promociones",
-        "creado_en",
-        "staff_nombre",
-        "staff_id",
-        "staff_promo",
-        "staff_estado",
-        "staff_nota",
-    ]
-    df_out = pd.DataFrame(filas, columns=cols)
-    df_out.to_csv(STAFF_EVENTS_CSV, index=False, encoding="utf-8-sig")
+
+    existing = {ev.id: ev for ev in StaffEvent.query.all()}
+    incoming_ids = {_safe_text(ev.get("id")) for ev in events if _safe_text(ev.get("id"))}
+
+    for ev_id, ev_model in existing.items():
+        if ev_id not in incoming_ids:
+            db.session.delete(ev_model)
+
+    for ev in events:
+        ev_id = _safe_text(ev.get("id")) or uuid.uuid4().hex
+        ev_model = existing.get(ev_id)
+        if ev_model is None:
+            ev_model = StaffEvent(id=ev_id)
+            db.session.add(ev_model)
+
+        ev_model.nombre = _safe_text(ev.get("nombre")) or "Evento sin nombre"
+        ev_model.fecha = _safe_text(ev.get("fecha"))
+        ev_model.hora_inicio = _safe_text(ev.get("hora_inicio"))
+        ev_model.hora_fin = _safe_text(ev.get("hora_fin"))
+        ev_model.promociones = "|".join([_safe_text(p) for p in ev.get("promociones", []) if _safe_text(p)])
+        ev_model.creado_en = _safe_text(ev.get("creado_en"))
+
+        ev_model.staff.clear()
+        for st in ev.get("staff", []):
+            nombre_staff = _safe_text(st.get("nombre"))
+            if not nombre_staff:
+                continue
+            ev_model.staff.append(
+                StaffEventMember(
+                    nombre=nombre_staff,
+                    staff_id_value=_safe_text(st.get("id")),
+                    promo=_safe_text(st.get("promo")),
+                    estado=_normalizar_estado_asistencia(st.get("estado")),
+                    nota=_safe_text(st.get("nota")),
+                )
+            )
+
+    db.session.commit()
 
 
 def construir_catalogo_staff(df):
@@ -931,6 +1051,40 @@ def staff():
     )
 
 
+@app.route("/staff/export.csv")
+def export_staff_csv():
+    events = normalizar_eventos_staff(cargar_eventos_staff())
+    filas = _eventos_a_filas_csv(events)
+    cols = [
+        "event_id",
+        "nombre",
+        "fecha",
+        "hora_inicio",
+        "hora_fin",
+        "promociones",
+        "creado_en",
+        "staff_nombre",
+        "staff_id",
+        "staff_promo",
+        "staff_estado",
+        "staff_nota",
+    ]
+    df_out = pd.DataFrame(filas, columns=cols)
+    if df_out.empty:
+        df_out = pd.DataFrame(columns=cols)
+
+    csv_bytes = BytesIO()
+    df_out.to_csv(csv_bytes, index=False, encoding="utf-8-sig")
+    csv_bytes.seek(0)
+    file_name = f"staff_eventos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    return send_file(
+        csv_bytes,
+        mimetype="text/csv; charset=utf-8",
+        as_attachment=True,
+        download_name=file_name,
+    )
+
+
 @app.route("/api/horario")
 def api_horario():
     nombre = request.args.get("nombre")
@@ -963,6 +1117,10 @@ def api_horario():
         })
 
     return jsonify(res)
+
+
+with app.app_context():
+    ensure_staff_tables()
 
 
 if __name__ == "__main__":

@@ -35,6 +35,24 @@
     .menu-link.active { background: #1f5ad6; color: #fff; border-color: #1f5ad6; }
     h2 { color: #1a1a2e; margin-bottom: 14px; }
     h3 { color: #1a1a2e; margin-bottom: 10px; }
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .download-link {
+      text-decoration: none;
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid #d5deeb;
+      background: #f8fbff;
+      color: #1f5ad6;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
     .layout {
       display: grid;
       grid-template-columns: 380px 1fr;
@@ -242,7 +260,10 @@
       <a class="menu-link {% if active_tab == 'staff' %}active{% endif %}" href="/staff">Eventos y asistencia staff</a>
     </nav>
 
-    <h2>Gestion de eventos y asistencia de staff</h2>
+    <div class="header-row">
+      <h2>Gestion de eventos y asistencia de staff</h2>
+      <a class="download-link" href="/staff/export.csv">Descargar CSV</a>
+    </div>
 
     <div class="layout">
       <aside class="card">
