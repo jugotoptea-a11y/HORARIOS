@@ -1,13 +1,15 @@
 import os
-import json
 import uuid
 import calendar
-import requests
+import re
+import unicodedata
 from io import BytesIO
 from urllib.parse import urlencode
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine, inspect, text
 import pandas as pd
+import requests
 from datetime import datetime, timedelta
 from threading import Lock
 
@@ -15,26 +17,21 @@ app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ruta_csv = os.path.join(BASE_DIR, "horarios_extraidos.csv")
+ruta_excel_local = os.path.join(BASE_DIR, "Informaci\u00f3n.xlsx")
 
 # Configuración opcional para Excel en la nube
 # URL fijada por defecto (puedes sobrescribirla con la variable de entorno EXCEL_URL)
 EXCEL_URL = os.environ.get("EXCEL_URL", "https://universidaddelacosta-my.sharepoint.com/:x:/g/personal/sbarriosb_cuc_edu_co/IQCQInUk0TAsRKREO6BIYHEWAYTOW10Tw65VVjKnMc63Xkw?e=pZiwUW")  # URL pública o pre-signed para descargar el .xlsx
-EXCEL_UPLOAD_URL = os.environ.get("EXCEL_UPLOAD_URL")  # URL para subir (PUT) el .xlsx actualizado (opcional)
-CLOUD_SHEET_GENERAL = os.environ.get("CLOUD_SHEET_GENERAL", "General")
-CLOUD_SHEET_EVENTS = os.environ.get("CLOUD_SHEET_EVENTS", "STAFF EVENTOS 2026")
+STUDENTS_SHEET_NAME = os.environ.get("STUDENTS_SHEET_NAME", "General")
 STAFF_EVENTS_CSV = os.path.join(BASE_DIR, "staff_eventos.csv")
-STAFF_EVENTS_JSON_LEGACY = os.path.join(BASE_DIR, "staff_eventos.json")
+SYNC_TOKEN = os.environ.get("DASHBOARD_SYNC_TOKEN", "").strip()
+STUDENTS_DB_PATH = os.path.join(BASE_DIR, "app.db")
 
 
-def _build_database_uri():
-    raw = (os.environ.get("DATABASE_URL") or "").strip()
+def _normalize_database_uri(raw):
+    raw = (raw or "").strip()
     if not raw:
-        if (os.environ.get("RENDER") or "").lower() == "true":
-            raise RuntimeError(
-                "DATABASE_URL es obligatorio en Render para evitar guardar datos "
-                "en SQLite efimero."
-            )
-        return f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}"
+        return ""
     if raw.startswith("postgres://"):
         return raw.replace("postgres://", "postgresql+psycopg://", 1)
     if raw.startswith("postgresql://"):
@@ -42,55 +39,43 @@ def _build_database_uri():
     return raw
 
 
-app.config["SQLALCHEMY_DATABASE_URI"] = _build_database_uri()
+SERVICES_DATABASE_URL = _normalize_database_uri(os.environ.get("DATABASE_URL"))
+
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{STUDENTS_DB_PATH}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
+services_engine = create_engine(SERVICES_DATABASE_URL, pool_pre_ping=True, future=True) if SERVICES_DATABASE_URL else None
 
 
-class StaffEvent(db.Model):
-    __tablename__ = "staff_events"
+class Student(db.Model):
+    __tablename__ = "students"
 
-    id = db.Column(db.String(64), primary_key=True)
-    nombre = db.Column(db.String(255), nullable=False, default="Evento sin nombre")
-    fecha = db.Column(db.String(10), nullable=False, index=True)
-    hora_inicio = db.Column(db.String(8), nullable=True, default="")
-    hora_fin = db.Column(db.String(8), nullable=True, default="")
-    promociones = db.Column(db.Text, nullable=False, default="")
-    creado_en = db.Column(db.String(32), nullable=True, default="")
-    staff = db.relationship(
-        "StaffEventMember",
-        backref="event",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )
-
-
-class StaffEventMember(db.Model):
-    __tablename__ = "staff_event_members"
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    event_id = db.Column(
-        db.String(64),
-        db.ForeignKey("staff_events.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    nombre = db.Column(db.String(255), nullable=False)
-    staff_id_value = db.Column("staff_id", db.String(64), nullable=True, default="")
+    documento = db.Column(db.String(64), primary_key=True)
+    nombre_completo = db.Column(db.String(255), nullable=False)
+    nombre_norm = db.Column(db.String(255), nullable=False, index=True)
     promo = db.Column(db.String(64), nullable=True, default="")
-    estado = db.Column(db.String(16), nullable=False, default="pendiente")
-    nota = db.Column(db.Text, nullable=True, default="")
+    correo = db.Column(db.String(255), nullable=True, default="")
+    contacto = db.Column(db.String(64), nullable=True, default="")
+    municipio = db.Column(db.String(255), nullable=True, default="")
+    programa = db.Column(db.String(255), nullable=True, default="")
+    actualizado_en = db.Column(db.String(32), nullable=True, default="")
 
 
-_staff_tables_ready = False
+_students_db_ready = False
+_students_excel_mtime = None
+_students_synced = False
+_services_db_ready = False
 
 
-def ensure_staff_tables():
-    global _staff_tables_ready
-    if _staff_tables_ready:
+def ensure_students_db():
+    global _students_db_ready
+    if _students_db_ready:
         return
     db.create_all()
-    _staff_tables_ready = True
+    sync_students_from_excel()
+    if services_engine is None:
+        _migrar_eventos_db_a_csv_si_aplica()
+    _students_db_ready = True
 
 
 # Cache para evitar recargar CSV en cada petición
@@ -117,6 +102,42 @@ def generar_horas():
 HORAS = generar_horas()
 
 
+def _titulo_nombre(token):
+    return str(token).lower().capitalize()
+
+
+def _tomar_apellido(tokens, start):
+    particulas = {"DE", "DEL", "LA", "LAS", "LOS"}
+    apellido = []
+    idx = start
+    while idx < len(tokens) and tokens[idx] in particulas:
+        apellido.append(tokens[idx])
+        idx += 1
+    if idx < len(tokens):
+        apellido.append(tokens[idx])
+        idx += 1
+    return apellido, idx
+
+
+def _formatear_nombre_becado(nombre):
+    raw = _safe_text(nombre)
+    if not raw:
+        return ""
+    tokens = raw.split()
+    if len(tokens) < 3:
+        return " ".join(_titulo_nombre(t) for t in tokens) if raw.upper() == raw else raw
+    if raw.upper() != raw:
+        return raw
+
+    apellido_1, idx = _tomar_apellido(tokens, 0)
+    apellido_2, idx = _tomar_apellido(tokens, idx)
+    nombres = tokens[idx:]
+    if not nombres:
+        return " ".join(_titulo_nombre(t) for t in tokens)
+    ordenado = nombres + apellido_1 + apellido_2
+    return " ".join(_titulo_nombre(t) for t in ordenado)
+
+
 def convertir_24(hora):
     """Convierte una hora en formato 12h o 24h a minutos desde medianoche (int).
     Retorna None si no se puede parsear.
@@ -135,6 +156,19 @@ def convertir_24(hora):
     return dt.hour * 60 + dt.minute
 
 
+def _series_col(df, col):
+    if col in df.columns:
+        return df[col]
+    return pd.Series([""] * len(df), index=df.index)
+
+
+def _parse_horas_series(series):
+    s = series.astype(str).str.strip().str.upper()
+    parsed_12h = pd.to_datetime(s, format="%I:%M %p", errors="coerce")
+    parsed_24h = pd.to_datetime(s, format="%H:%M", errors="coerce")
+    return parsed_12h.fillna(parsed_24h)
+
+
 def cargar():
 
     global _cached_df, _cached_mtime
@@ -151,14 +185,8 @@ def cargar():
         df = pd.read_csv(ruta_csv, encoding="utf-8-sig")
 
         # Normalizar y parsear horas (vectorizado)
-        inicio_dt = pd.to_datetime(
-            df.get("Hora_Inicio", "").astype(str).str.strip().str.upper(),
-            format="%I:%M %p", errors="coerce"
-        )
-        fin_dt = pd.to_datetime(
-            df.get("Hora_Fin", "").astype(str).str.strip().str.upper(),
-            format="%I:%M %p", errors="coerce"
-        )
+        inicio_dt = _parse_horas_series(_series_col(df, "Hora_Inicio"))
+        fin_dt = _parse_horas_series(_series_col(df, "Hora_Fin"))
 
         df["_horas_validas"] = inicio_dt.notna() & fin_dt.notna()
 
@@ -170,6 +198,8 @@ def cargar():
         df["Hora_Fin_min"] = (fin_dt.dt.hour * 60 + fin_dt.dt.minute)
 
         df["Dia"] = df.get("Dia", "").astype(str).str.strip().str.upper()
+        if "Nombre_Estudiante" in df.columns:
+            df["Nombre_Estudiante"] = df["Nombre_Estudiante"].apply(_formatear_nombre_becado)
 
         _cached_df = df
         _cached_mtime = mtime
@@ -193,19 +223,86 @@ def download_excel_bytes():
         return None
 
 
+def _normalizar_lookup(value):
+    text_value = "" if pd.isna(value) else str(value)
+    text_value = unicodedata.normalize("NFKD", text_value)
+    text_value = "".join(ch for ch in text_value if not unicodedata.combining(ch))
+    text_value = re.sub(r"\s+", " ", text_value).strip().lower()
+    return text_value
+
+
+def _dedupe_columns(columns):
+    result = []
+    seen = {}
+    for idx, col in enumerate(columns):
+        name = "" if pd.isna(col) else str(col).strip()
+        if not name or name.lower().startswith("unnamed"):
+            name = f"col_{idx}"
+        count = seen.get(name, 0)
+        seen[name] = count + 1
+        result.append(name if count == 0 else f"{name}_{count + 1}")
+    return result
+
+
+def _detect_header_row(raw):
+    for idx, row in raw.head(20).iterrows():
+        labels = [_normalizar_lookup(value) for value in row.tolist()]
+        has_id = any(label in {"id", "documento", "identificacion"} for label in labels)
+        has_name = any("nombre" in label for label in labels)
+        has_contact = any(label in {"correo", "email", "contacto", "telefono", "celular"} for label in labels)
+        if has_id and has_name and has_contact:
+            return idx
+    return 0
+
+
+def _read_excel_flexible(source, preferred_sheet=None):
+    xls = pd.ExcelFile(source)
+    sheet = preferred_sheet if preferred_sheet in xls.sheet_names else xls.sheet_names[0]
+    raw = xls.parse(sheet_name=sheet, header=None, dtype=str)
+    if raw.empty:
+        return pd.DataFrame()
+
+    header_idx = _detect_header_row(raw)
+    df = raw.iloc[header_idx + 1:].copy()
+    df.columns = _dedupe_columns(raw.iloc[header_idx].tolist())
+    df = df.dropna(how="all")
+    return df
+
+
 def read_cloud_general_df():
     """Lee la hoja 'General' del Excel en la nube y la devuelve como DataFrame.
     Si no está disponible retorna DataFrame vacío.
     """
+    if os.path.exists(ruta_excel_local):
+        try:
+            return _read_excel_flexible(ruta_excel_local, STUDENTS_SHEET_NAME)
+        except Exception as e:
+            app.logger.warning("Error leyendo Excel local '%s': %s", ruta_excel_local, e)
+
     b = download_excel_bytes()
     if b is None:
         return pd.DataFrame()
     try:
-        df = pd.read_excel(b, sheet_name=CLOUD_SHEET_GENERAL, dtype=str)
-        return df
+        return _read_excel_flexible(b, STUDENTS_SHEET_NAME)
     except Exception as e:
-        app.logger.warning("Error leyendo hoja '%s' del Excel: %s", CLOUD_SHEET_GENERAL, e)
+        app.logger.warning("Error leyendo hoja '%s' del Excel: %s", STUDENTS_SHEET_NAME, e)
         return pd.DataFrame()
+
+
+def _clean_text_value(value):
+    if value is None or pd.isna(value):
+        return ""
+    value = str(value).strip()
+    if value.lower() in {"nan", "none", "nat"}:
+        return ""
+    return value
+
+
+def _clean_identifier(value):
+    value = _clean_text_value(value)
+    if re.fullmatch(r"\d+\.0", value):
+        return value[:-2]
+    return value
 
 
 def _find_column(df, candidates):
@@ -216,23 +313,110 @@ def _find_column(df, candidates):
         return None
     cols = list(df.columns)
     # coincidencia exacta (case-insensitive)
-    lowered = {str(c).strip().lower(): c for c in cols}
+    lowered = {_normalizar_lookup(c): c for c in cols}
     for cand in candidates:
         if cand is None:
             continue
-        key = cand.strip().lower()
+        key = _normalizar_lookup(cand)
         if key in lowered:
             return lowered[key]
     # buscar por inclusión
     for col in cols:
-        col_l = str(col).strip().lower()
+        col_l = _normalizar_lookup(col)
         for cand in candidates:
-            if cand and cand.strip().lower() in col_l:
+            if cand and _normalizar_lookup(cand) in col_l:
                 return col
     return None
 
 
-def get_student_info_by_names(names):
+def _students_dataframe_from_excel():
+    if not os.path.exists(ruta_excel_local):
+        return pd.DataFrame()
+    try:
+        return _read_excel_flexible(ruta_excel_local, STUDENTS_SHEET_NAME)
+    except Exception as e:
+        app.logger.warning("No se pudo leer %s para sincronizar estudiantes: %s", ruta_excel_local, e)
+        return pd.DataFrame()
+
+
+def _student_payloads_from_dataframe(df):
+    if df.empty:
+        return []
+
+    prom_col = _find_column(df, ["prom", "promocion", "promo", "promoción"])
+    id_col = _find_column(df, ["id", "id_estudiante", "documento", "identificacion", "identificación"])
+    nombre_col = _find_column(df, ["nombres y apellidos", "nombre y apellidos", "nombres", "nombre"])
+    correo_col = _find_column(df, ["correo", "email", "e-mail", "correo_electronico", "correo electrónico"])
+    contacto_col = _find_column(df, ["contacto", "telefono", "teléfono", "celular", "cel"])
+    municipio_col = _find_column(df, ["municipio", "ciudad"])
+    programa_col = _find_column(df, ["programa", "carrera"])
+
+    if not id_col or not nombre_col:
+        app.logger.warning("El Excel de estudiantes no tiene columnas suficientes: documento=%s nombre=%s", id_col, nombre_col)
+        return []
+
+    payloads = []
+    for _, row in df.iterrows():
+        documento = _clean_identifier(row.get(id_col))
+        nombre = _clean_text_value(row.get(nombre_col))
+        if not documento or not nombre:
+            continue
+        payloads.append({
+            "documento": documento,
+            "nombre_completo": nombre,
+            "nombre_norm": _normalizar_lookup(nombre),
+            "promo": _clean_identifier(row.get(prom_col)) if prom_col else "",
+            "correo": _clean_text_value(row.get(correo_col)) if correo_col else "",
+            "contacto": _clean_identifier(row.get(contacto_col)) if contacto_col else "",
+            "municipio": _clean_text_value(row.get(municipio_col)) if municipio_col else "",
+            "programa": _clean_text_value(row.get(programa_col)) if programa_col else "",
+        })
+    return payloads
+
+
+def sync_students_from_excel(force=False):
+    """Sincroniza Información.xlsx hacia app.db. Si el Excel no existe, la app usa lo que ya tenga la DB."""
+    global _students_excel_mtime, _students_synced
+
+    if not os.path.exists(ruta_excel_local):
+        _students_synced = True
+        return 0
+
+    mtime = os.path.getmtime(ruta_excel_local)
+    if not force and _students_synced and _students_excel_mtime == mtime:
+        return 0
+
+    payloads = _student_payloads_from_dataframe(_students_dataframe_from_excel())
+    now_value = datetime.now().isoformat(timespec="seconds")
+    seen_docs = set()
+
+    for payload in payloads:
+        seen_docs.add(payload["documento"])
+        student = Student.query.get(payload["documento"])
+        if student is None:
+            student = Student(documento=payload["documento"])
+            db.session.add(student)
+        student.nombre_completo = payload["nombre_completo"]
+        student.nombre_norm = payload["nombre_norm"]
+        student.promo = payload["promo"]
+        student.correo = payload["correo"]
+        student.contacto = payload["contacto"]
+        student.municipio = payload["municipio"]
+        student.programa = payload["programa"]
+        student.actualizado_en = now_value
+
+    if seen_docs:
+        for student in Student.query.filter(~Student.documento.in_(seen_docs)).all():
+            db.session.delete(student)
+
+    db.session.commit()
+    _students_excel_mtime = mtime
+    _students_synced = True
+    app.logger.info("Sincronizados %s estudiantes desde Información.xlsx hacia app.db.", len(payloads))
+    return len(payloads)
+
+
+def _get_student_info_by_names_from_excel_unused(names):
     """Devuelve un dict mapping nombre_original -> info dict (PROM, ID, NOMBRE Y APELLIDOS, CORREO, CONTACTO).
     Usa la hoja 'General' del Excel en la nube. Si no encuentra, rellena con valores vacíos.
     """
@@ -262,18 +446,19 @@ def get_student_info_by_names(names):
         nm = str(row.get(nombre_col, "")).strip()
         if not nm:
             continue
-        index_map[nm.lower()] = row
+        index_map[_normalizar_lookup(nm)] = row
 
     for n in names:
         key = str(n).strip()
         row = None
+        lookup_key = _normalizar_lookup(key)
         # búsqueda exacta
-        if key.lower() in index_map:
-            row = index_map[key.lower()]
+        if lookup_key in index_map:
+            row = index_map[lookup_key]
         else:
             # búsqueda por inclusión (parcial)
             for k, r in index_map.items():
-                if key.lower() in k or k in key.lower():
+                if lookup_key in k or k in lookup_key:
                     row = r
                     break
 
@@ -291,6 +476,57 @@ def get_student_info_by_names(names):
     return result
 # NOTA: edición/subida automática del Excel remoto deshabilitada por petición del usuario.
 # Se conservan funciones de lectura del Excel remoto (si EXCEL_URL está configurada).
+
+
+def get_student_info_by_names(names):
+    """Devuelve datos maestros desde app.db, cruzando por nombre normalizado.
+
+    Estrategia de matching (en orden de prioridad):
+    1. Coincidencia exacta por nombre_norm.
+    2. Substring bidireccional.
+    3. Bag-of-words: mismas palabras sin importar el orden
+       (maneja casos como "Arias Marianella Montenegro" vs "Marianella Montenegro Arias").
+    """
+    ensure_students_db()
+    result = {}
+    clean_names = [_safe_text(n) for n in names if _safe_text(n)]
+    lookup_keys = {_normalizar_lookup(n) for n in clean_names}
+    students = Student.query.filter(Student.nombre_norm.in_(lookup_keys)).all() if lookup_keys else []
+    exact_map = {student.nombre_norm: student for student in students}
+    all_students = None
+
+    for n in clean_names:
+        key = _safe_text(n)
+        lookup_key = _normalizar_lookup(key)
+        student = exact_map.get(lookup_key)
+
+        if student is None:
+            if all_students is None:
+                all_students = Student.query.all()
+            lookup_words = set(lookup_key.split()) if lookup_key else set()
+            for candidate in all_students:
+                candidate_key = _safe_text(candidate.nombre_norm)
+                # Paso 2: substring bidireccional
+                if lookup_key and (lookup_key in candidate_key or candidate_key in lookup_key):
+                    student = candidate
+                    break
+                # Paso 3: bag-of-words (mismo conjunto de palabras, sin importar orden)
+                if lookup_words and lookup_words == set(candidate_key.split()):
+                    student = candidate
+                    break
+
+        if student is None:
+            result[n] = {"PROM": "", "ID": "", "NOMBRE Y APELLIDOS": key, "CORREO": "", "CONTACTO": ""}
+        else:
+            result[n] = {
+                "PROM": _safe_text(student.promo),
+                "ID": _safe_text(student.documento),
+                "NOMBRE Y APELLIDOS": _safe_text(student.nombre_completo) or key,
+                "CORREO": _safe_text(student.correo),
+                "CONTACTO": _safe_text(student.contacto),
+            }
+
+    return result
 
 
 def buscar_disponibles(df, dias, inicio, fin, estudiantes_seleccionados):
@@ -350,7 +586,7 @@ def buscar_no_disponibles(df, dias, inicio, fin, estudiantes_seleccionados):
 
 
 def construir_info_estudiantes(df):
-    """Retorna un dict {Nombre_Estudiante: {id, promo}} con el primer registro de cada estudiante."""
+    """Retorna un dict {Nombre_Estudiante: {id, promo, correo, contacto}}."""
     info = {}
     for _, row in df.drop_duplicates(subset="Nombre_Estudiante").iterrows():
         nombre = row["Nombre_Estudiante"]
@@ -359,7 +595,15 @@ def construir_info_estudiantes(df):
         except (ValueError, TypeError):
             doc = str(row["ID_Estudiante"]) if pd.notna(row["ID_Estudiante"]) else ""
         promo = str(row["Promocion"]) if pd.notna(row.get("Promocion", None)) else ""
-        info[nombre] = {"id": doc, "promo": promo}
+        info[nombre] = {"id": doc, "promo": promo, "correo": "", "contacto": ""}
+
+    excel_info = get_student_info_by_names(info.keys())
+    for nombre, data in info.items():
+        extra = excel_info.get(nombre, {})
+        data["id"] = str(extra.get("ID") or data.get("id") or "")
+        data["promo"] = str(extra.get("PROM") or data.get("promo") or "")
+        data["correo"] = str(extra.get("CORREO") or "")
+        data["contacto"] = str(extra.get("CONTACTO") or "")
     return info
 
 
@@ -376,6 +620,23 @@ def _safe_text(value):
     if value is None:
         return ""
     return str(value).strip()
+
+
+def _json_error(message, status=400):
+    return jsonify({"ok": False, "error": message}), status
+
+
+def _sync_authorized():
+    if not SYNC_TOKEN:
+        return True
+    auth_header = request.headers.get("Authorization", "")
+    bearer = auth_header.replace("Bearer ", "", 1).strip() if auth_header.startswith("Bearer ") else ""
+    provided = (
+        bearer
+        or request.headers.get("X-Dashboard-Token", "").strip()
+        or request.args.get("token", "").strip()
+    )
+    return provided == SYNC_TOKEN
 
 
 def _normalizar_estado_asistencia(value):
@@ -433,6 +694,7 @@ def _eventos_a_filas_csv(events):
             "hora_inicio": _safe_text(ev.get("hora_inicio")),
             "hora_fin": _safe_text(ev.get("hora_fin")),
             "promociones": "|".join([_safe_text(p) for p in ev.get("promociones", []) if _safe_text(p)]),
+            "comentarios": _safe_text(ev.get("comentarios")),
             "creado_en": _safe_text(ev.get("creado_en")),
         }
         staff = ev.get("staff", []) or []
@@ -472,6 +734,7 @@ def _filas_csv_a_eventos(df_csv):
             "hora_inicio": _safe_text(first.get("hora_inicio")),
             "hora_fin": _safe_text(first.get("hora_fin")),
             "promociones": _split_promociones(first.get("promociones")),
+            "comentarios": _safe_text(first.get("comentarios")),
             "staff": [],
             "creado_en": _safe_text(first.get("creado_en")),
         }
@@ -491,6 +754,36 @@ def _filas_csv_a_eventos(df_csv):
     return events
 
 
+def _payload_a_eventos_staff(payload):
+    if not isinstance(payload, dict):
+        return []
+
+    if isinstance(payload.get("events"), list):
+        return normalizar_eventos_staff(payload.get("events"))
+
+    rows = payload.get("rows")
+    if isinstance(rows, list):
+        df_rows = pd.DataFrame(rows)
+        return normalizar_eventos_staff(_filas_csv_a_eventos(df_rows))
+
+    if "event_id" in payload or "staff_nombre" in payload:
+        return normalizar_eventos_staff(_filas_csv_a_eventos(pd.DataFrame([payload])))
+
+    if "id" in payload or "fecha" in payload:
+        return normalizar_eventos_staff([payload])
+
+    return []
+
+
+def _merge_eventos_staff(existing_events, incoming_events):
+    merged = {ev.get("id"): ev for ev in normalizar_eventos_staff(existing_events) if ev.get("id")}
+    for ev in normalizar_eventos_staff(incoming_events):
+        ev_id = _safe_text(ev.get("id")) or uuid.uuid4().hex
+        ev["id"] = ev_id
+        merged[ev_id] = ev
+    return normalizar_eventos_staff(list(merged.values()))
+
+
 def _leer_eventos_legacy_en_disco():
     if os.path.exists(STAFF_EVENTS_CSV):
         try:
@@ -499,100 +792,276 @@ def _leer_eventos_legacy_en_disco():
         except Exception as e:
             app.logger.warning("No se pudo leer %s: %s", STAFF_EVENTS_CSV, e)
 
-    if os.path.exists(STAFF_EVENTS_JSON_LEGACY):
-        try:
-            with open(STAFF_EVENTS_JSON_LEGACY, "r", encoding="utf-8") as f:
-                payload = json.load(f)
-            events = payload.get("events", []) if isinstance(payload, dict) else []
-            return normalizar_eventos_staff(events)
-        except Exception as e:
-            app.logger.warning("No se pudo leer %s: %s", STAFF_EVENTS_JSON_LEGACY, e)
-
     return []
 
 
-def _event_model_to_dict(ev_model):
-    staff_rows = sorted(ev_model.staff, key=lambda s: (s.nombre or "").lower())
-    return {
-        "id": _safe_text(ev_model.id),
-        "nombre": _safe_text(ev_model.nombre) or "Evento sin nombre",
-        "fecha": _safe_text(ev_model.fecha),
-        "hora_inicio": _safe_text(ev_model.hora_inicio),
-        "hora_fin": _safe_text(ev_model.hora_fin),
-        "promociones": _split_promociones(ev_model.promociones),
-        "staff": [
-            {
-                "nombre": _safe_text(st.nombre),
-                "id": _safe_text(st.staff_id_value),
-                "promo": _safe_text(st.promo),
-                "estado": _normalizar_estado_asistencia(st.estado),
-                "nota": _safe_text(st.nota),
-            }
-            for st in staff_rows
-            if _safe_text(st.nombre)
-        ],
-        "creado_en": _safe_text(ev_model.creado_en),
-    }
+def _eventos_db_a_eventos():
+    inspector = inspect(db.engine)
+    table_names = set(inspector.get_table_names())
+    if "staff_events" not in table_names:
+        return []
+
+    event_columns = {col["name"] for col in inspector.get_columns("staff_events")}
+    comentarios_expr = "ev.comentarios" if "comentarios" in event_columns else "''"
+
+    if "staff_event_members" in table_names:
+        rows = db.session.execute(text(f"""
+            SELECT
+                ev.id AS event_id,
+                ev.nombre AS nombre,
+                ev.fecha AS fecha,
+                ev.hora_inicio AS hora_inicio,
+                ev.hora_fin AS hora_fin,
+                ev.promociones AS promociones,
+                {comentarios_expr} AS comentarios,
+                ev.creado_en AS creado_en,
+                st.nombre AS staff_nombre,
+                st.staff_id AS staff_id,
+                st.promo AS staff_promo,
+                st.estado AS staff_estado,
+                st.nota AS staff_nota
+            FROM staff_events ev
+            LEFT JOIN staff_event_members st ON st.event_id = ev.id
+            ORDER BY ev.fecha, ev.hora_inicio, ev.nombre, st.nombre
+        """)).mappings().all()
+    else:
+        rows = db.session.execute(text(f"""
+            SELECT
+                ev.id AS event_id,
+                ev.nombre AS nombre,
+                ev.fecha AS fecha,
+                ev.hora_inicio AS hora_inicio,
+                ev.hora_fin AS hora_fin,
+                ev.promociones AS promociones,
+                {comentarios_expr} AS comentarios,
+                ev.creado_en AS creado_en,
+                NULL AS staff_nombre,
+                NULL AS staff_id,
+                NULL AS staff_promo,
+                NULL AS staff_estado,
+                NULL AS staff_nota
+            FROM staff_events ev
+            ORDER BY ev.fecha, ev.hora_inicio, ev.nombre
+        """)).mappings().all()
+
+    if not rows:
+        return []
+
+    return normalizar_eventos_staff(_filas_csv_a_eventos(pd.DataFrame(rows)))
 
 
-def _migrar_legacy_a_db_si_aplica():
-    ensure_staff_tables()
-    if StaffEvent.query.first() is not None:
+def _drop_staff_tables_from_students_db_if_present():
+    inspector = inspect(db.engine)
+    table_names = set(inspector.get_table_names())
+    dropped = False
+    for table_name in ["staff_event_members", "staff_events"]:
+        if table_name in table_names:
+            db.session.execute(text(f"DROP TABLE IF EXISTS {table_name}"))
+            dropped = True
+    if dropped:
+        db.session.commit()
+        app.logger.info("Tablas legacy de staff removidas de app.db.")
+
+
+def _guardar_eventos_staff_csv(events):
+    events = normalizar_eventos_staff(events)
+    filas = _eventos_a_filas_csv(events)
+    cols = [
+        "event_id",
+        "nombre",
+        "fecha",
+        "hora_inicio",
+        "hora_fin",
+        "promociones",
+        "creado_en",
+        "comentarios",
+        "staff_nombre",
+        "staff_id",
+        "staff_promo",
+        "staff_estado",
+        "staff_nota",
+    ]
+    pd.DataFrame(filas, columns=cols).to_csv(STAFF_EVENTS_CSV, index=False, encoding="utf-8-sig")
+
+
+def _migrar_eventos_db_a_csv_si_aplica():
+    db_events = _eventos_db_a_eventos()
+    if db_events:
+        csv_events = _leer_eventos_legacy_en_disco()
+        merged = _merge_eventos_staff(csv_events, db_events)
+        _guardar_eventos_staff_csv(merged)
+        app.logger.info("Migrados %s eventos/asistencias legacy de app.db a staff_eventos.csv.", len(db_events))
+
+    _drop_staff_tables_from_students_db_if_present()
+
+
+def _services_has_staff_events(conn):
+    row = conn.execute(text("SELECT 1 FROM staff_events LIMIT 1")).first()
+    return row is not None
+
+
+def _eventos_services_a_eventos():
+    with services_engine.begin() as conn:
+        rows = conn.execute(text("""
+            SELECT
+                ev.id AS event_id,
+                ev.nombre AS nombre,
+                ev.fecha AS fecha,
+                ev.hora_inicio AS hora_inicio,
+                ev.hora_fin AS hora_fin,
+                ev.promociones AS promociones,
+                ev.comentarios AS comentarios,
+                ev.creado_en AS creado_en,
+                st.nombre AS staff_nombre,
+                st.staff_id AS staff_id,
+                st.promo AS staff_promo,
+                st.estado AS staff_estado,
+                st.nota AS staff_nota
+            FROM staff_events ev
+            LEFT JOIN staff_event_members st ON st.event_id = ev.id
+            ORDER BY ev.fecha, ev.hora_inicio, ev.nombre, st.nombre
+        """)).mappings().all()
+
+    if not rows:
+        return []
+
+    return normalizar_eventos_staff(_filas_csv_a_eventos(pd.DataFrame(rows)))
+
+
+def _guardar_eventos_staff_services_unchecked(events):
+    events = normalizar_eventos_staff(events)
+    with services_engine.begin() as conn:
+        conn.execute(text("DELETE FROM staff_event_members"))
+        conn.execute(text("DELETE FROM staff_events"))
+
+        for ev in events:
+            conn.execute(text("""
+                INSERT INTO staff_events (
+                    id, nombre, fecha, hora_inicio, hora_fin, promociones, comentarios, creado_en
+                )
+                VALUES (
+                    :id, :nombre, :fecha, :hora_inicio, :hora_fin, :promociones, :comentarios, :creado_en
+                )
+            """), {
+                "id": _safe_text(ev.get("id")) or uuid.uuid4().hex,
+                "nombre": _safe_text(ev.get("nombre")) or "Evento sin nombre",
+                "fecha": _safe_text(ev.get("fecha")),
+                "hora_inicio": _safe_text(ev.get("hora_inicio")),
+                "hora_fin": _safe_text(ev.get("hora_fin")),
+                "promociones": "|".join([_safe_text(p) for p in ev.get("promociones", []) if _safe_text(p)]),
+                "comentarios": _safe_text(ev.get("comentarios")),
+                "creado_en": _safe_text(ev.get("creado_en")),
+            })
+
+            for st in ev.get("staff", []) or []:
+                nombre_staff = _safe_text(st.get("nombre"))
+                if not nombre_staff:
+                    continue
+                conn.execute(text("""
+                    INSERT INTO staff_event_members (
+                        event_id, nombre, staff_id, promo, estado, nota
+                    )
+                    VALUES (
+                        :event_id, :nombre, :staff_id, :promo, :estado, :nota
+                    )
+                """), {
+                    "event_id": _safe_text(ev.get("id")),
+                    "nombre": nombre_staff,
+                    "staff_id": _safe_text(st.get("id")),
+                    "promo": _safe_text(st.get("promo")),
+                    "estado": _normalizar_estado_asistencia(st.get("estado")),
+                    "nota": _safe_text(st.get("nota")),
+                })
+
+
+def _migrar_eventos_legacy_a_services_si_aplica():
+    if services_engine is None:
         return
-    legacy_events = _leer_eventos_legacy_en_disco()
-    if legacy_events:
-        guardar_eventos_staff(legacy_events)
-        app.logger.info("Migrados %s eventos legacy a base de datos.", len(legacy_events))
+
+    with services_engine.begin() as conn:
+        if _services_has_staff_events(conn):
+            _drop_staff_tables_from_students_db_if_present()
+            return
+
+    csv_events = _leer_eventos_legacy_en_disco()
+    db_events = _eventos_db_a_eventos()
+    merged = _merge_eventos_staff(csv_events, db_events)
+
+    if merged:
+        _guardar_eventos_staff_services_unchecked(merged)
+        app.logger.info("Migrados %s eventos/asistencias legacy hacia DATABASE_URL.", len(merged))
+
+    _drop_staff_tables_from_students_db_if_present()
+
+
+def ensure_services_db():
+    global _services_db_ready
+    if services_engine is None:
+        return False
+    if _services_db_ready:
+        return True
+
+    with services_engine.begin() as conn:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS staff_events (
+                id VARCHAR(64) PRIMARY KEY,
+                nombre VARCHAR(255) NOT NULL,
+                fecha VARCHAR(32) NOT NULL,
+                hora_inicio VARCHAR(16),
+                hora_fin VARCHAR(16),
+                promociones TEXT,
+                comentarios TEXT,
+                creado_en VARCHAR(32)
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS staff_event_members (
+                event_id VARCHAR(64) NOT NULL,
+                nombre VARCHAR(255) NOT NULL,
+                staff_id VARCHAR(64),
+                promo VARCHAR(64),
+                estado VARCHAR(32),
+                nota TEXT,
+                PRIMARY KEY (event_id, nombre),
+                FOREIGN KEY (event_id) REFERENCES staff_events (id)
+            )
+        """))
+
+    _services_db_ready = True
+    _migrar_eventos_legacy_a_services_si_aplica()
+    return True
+
+
+def _cargar_eventos_staff_services():
+    ensure_services_db()
+    try:
+        return _eventos_services_a_eventos()
+    except Exception as e:
+        app.logger.warning("No se pudo leer staff desde DATABASE_URL: %s", e)
+        return []
 
 
 def cargar_eventos_staff():
-    ensure_staff_tables()
-    _migrar_legacy_a_db_si_aplica()
-    rows = StaffEvent.query.order_by(StaffEvent.fecha, StaffEvent.hora_inicio, StaffEvent.nombre).all()
-    return [_event_model_to_dict(ev) for ev in rows]
+    if services_engine is not None:
+        return _cargar_eventos_staff_services()
+
+    if not os.path.exists(STAFF_EVENTS_CSV):
+        return []
+    try:
+        df_csv = pd.read_csv(STAFF_EVENTS_CSV, dtype=str, keep_default_na=False)
+        return normalizar_eventos_staff(_filas_csv_a_eventos(df_csv))
+    except Exception as e:
+        app.logger.warning("No se pudo leer %s: %s", STAFF_EVENTS_CSV, e)
+        return []
 
 
 def guardar_eventos_staff(events):
-    ensure_staff_tables()
-    events = normalizar_eventos_staff(events)
+    if services_engine is not None:
+        ensure_services_db()
+        _guardar_eventos_staff_services_unchecked(events)
+        return
 
-    existing = {ev.id: ev for ev in StaffEvent.query.all()}
-    incoming_ids = {_safe_text(ev.get("id")) for ev in events if _safe_text(ev.get("id"))}
-
-    for ev_id, ev_model in existing.items():
-        if ev_id not in incoming_ids:
-            db.session.delete(ev_model)
-
-    for ev in events:
-        ev_id = _safe_text(ev.get("id")) or uuid.uuid4().hex
-        ev_model = existing.get(ev_id)
-        if ev_model is None:
-            ev_model = StaffEvent(id=ev_id)
-            db.session.add(ev_model)
-
-        ev_model.nombre = _safe_text(ev.get("nombre")) or "Evento sin nombre"
-        ev_model.fecha = _safe_text(ev.get("fecha"))
-        ev_model.hora_inicio = _safe_text(ev.get("hora_inicio"))
-        ev_model.hora_fin = _safe_text(ev.get("hora_fin"))
-        ev_model.promociones = "|".join([_safe_text(p) for p in ev.get("promociones", []) if _safe_text(p)])
-        ev_model.creado_en = _safe_text(ev.get("creado_en"))
-
-        ev_model.staff.clear()
-        for st in ev.get("staff", []):
-            nombre_staff = _safe_text(st.get("nombre"))
-            if not nombre_staff:
-                continue
-            ev_model.staff.append(
-                StaffEventMember(
-                    nombre=nombre_staff,
-                    staff_id_value=_safe_text(st.get("id")),
-                    promo=_safe_text(st.get("promo")),
-                    estado=_normalizar_estado_asistencia(st.get("estado")),
-                    nota=_safe_text(st.get("nota")),
-                )
-            )
-
-    db.session.commit()
+    _guardar_eventos_staff_csv(events)
 
 
 def construir_catalogo_staff(df):
@@ -631,6 +1100,7 @@ def _normalizar_evento_staff(raw_event):
         "hora_inicio": _safe_text(raw_event.get("hora_inicio")),
         "hora_fin": _safe_text(raw_event.get("hora_fin")),
         "promociones": [_safe_text(p) for p in raw_event.get("promociones", []) if _safe_text(p)],
+        "comentarios": _safe_text(raw_event.get("comentarios")),
         "staff": staff,
         "creado_en": _safe_text(raw_event.get("creado_en")),
     }
@@ -729,6 +1199,8 @@ def index():
     disponibles = []
     disponibles_info = {}  # {nombre: id_documento}
     disponibles_promo = {}  # {nombre: promo}
+    disponibles_correo = {}  # {nombre: correo}
+    disponibles_contacto = {}  # {nombre: telefono/contacto}
     horario = []
     sel_estudiante = []
     sel_dias = []
@@ -800,6 +1272,8 @@ def index():
         info_map = construir_info_estudiantes(df_filtered)
         disponibles_info = {nombre: info_map.get(nombre, {"id": "", "promo": ""}).get("id", "") for nombre in disponibles}
         disponibles_promo = {nombre: info_map.get(nombre, {"id": "", "promo": ""}).get("promo", "") for nombre in disponibles}
+        disponibles_correo = {nombre: info_map.get(nombre, {}).get("correo", "") for nombre in disponibles}
+        disponibles_contacto = {nombre: info_map.get(nombre, {}).get("contacto", "") for nombre in disponibles}
 
         if sel_estudiante:
             clases = df_filtered[df_filtered["Nombre_Estudiante"].isin(sel_estudiante)]
@@ -810,12 +1284,13 @@ def index():
                 # Saltar filas sin horas válidas para el horario visual
                 if not row.get("_horas_validas", False):
                     continue
-                try:
-                    codigo = str(int(row["Codigo_Clase"]))
-                except (ValueError, TypeError):
-                    codigo = str(row["Codigo_Clase"]) if pd.notna(row["Codigo_Clase"]) else "--"
-                
-                nom_comp = str(row["Nombre_Estudiante"]).split()
+                nombre_estudiante = _safe_text(row["Nombre_Estudiante"])
+                maestro = info_map.get(nombre_estudiante, {})
+                codigo = _safe_text(maestro.get("id")) or "--"
+                correo = _safe_text(maestro.get("correo"))
+                contacto = _safe_text(maestro.get("contacto"))
+
+                nom_comp = nombre_estudiante.split()
                 nombre_corto = nom_comp[0] if nom_comp else ""
                 sufijo_nombre = f" ({nombre_corto})" if len(sel_estudiante) > 1 else ""
                 
@@ -824,7 +1299,10 @@ def index():
                         "inicio": row["Hora_Inicio"],
                     "fin": row["Hora_Fin"],
                     "materia": str(row["Materia"]) + sufijo_nombre,
+                    "docente": str(row.get("Docente", "")) if pd.notna(row.get("Docente", "")) else "",
                     "codigo": codigo,
+                    "correo": correo,
+                    "contacto": contacto,
                     "color": color_map.get(row["Materia"], "#3a7afe"),
                 })
     else:
@@ -850,6 +1328,8 @@ def index():
         disponibles=disponibles,
         disponibles_info=disponibles_info,
         disponibles_promo=disponibles_promo,
+        disponibles_correo=disponibles_correo,
+        disponibles_contacto=disponibles_contacto,
         horario=horario,
         dias_semana=dias,
         sel_estudiante=sel_estudiante,
@@ -914,6 +1394,7 @@ def staff():
                     "hora_inicio": hora_inicio,
                     "hora_fin": hora_fin,
                     "promociones": promociones_form,
+                    "comentarios": "",
                     "staff": staff_rows,
                     "creado_en": datetime.now().isoformat(timespec="seconds"),
                 })
@@ -933,6 +1414,7 @@ def staff():
                 hora_inicio = _safe_text(request.form.get("hora_inicio"))
                 hora_fin = _safe_text(request.form.get("hora_fin"))
                 promociones_text = _safe_text(request.form.get("promociones_texto"))
+                comentarios = _safe_text(request.form.get("comentarios"))
                 promociones_edit = [p.strip() for p in promociones_text.split(",") if p.strip()]
                 staff_names = request.form.getlist("staff_name")
                 staff_estados = request.form.getlist("staff_estado")
@@ -942,6 +1424,7 @@ def staff():
                 ev["hora_inicio"] = hora_inicio
                 ev["hora_fin"] = hora_fin
                 ev["promociones"] = promociones_edit
+                ev["comentarios"] = comentarios
 
                 if staff_names and staff_estados:
                     estado_por_staff = {}
@@ -1037,8 +1520,8 @@ def staff():
         for s in ev.get("staff", []):
             nombre_staff = _safe_text(s.get("nombre"))
             maestro = info_map.get(nombre_staff) or info_map_lower.get(nombre_staff.lower(), {})
-            staff_id = _safe_text(s.get("id")) or _safe_text(maestro.get("id"))
-            staff_promo = _safe_text(s.get("promo")) or _safe_text(maestro.get("promo"))
+            staff_id = _safe_text(maestro.get("id")) or _safe_text(s.get("id"))
+            staff_promo = _safe_text(maestro.get("promo")) or _safe_text(s.get("promo"))
             estado = _normalizar_estado_asistencia(s.get("estado"))
 
             staff_item = {
@@ -1100,6 +1583,7 @@ def export_staff_csv():
         "hora_fin",
         "promociones",
         "creado_en",
+        "comentarios",
         "staff_nombre",
         "staff_id",
         "staff_promo",
@@ -1122,6 +1606,51 @@ def export_staff_csv():
     )
 
 
+@app.route("/api/connection", methods=["GET", "POST"])
+def api_connection():
+    return jsonify({
+        "ok": True,
+        "status": "open",
+        "service": "dashboard",
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+    })
+
+
+@app.route("/api/staff/events", methods=["GET", "POST"])
+def api_staff_events():
+    if not _sync_authorized():
+        return _json_error("No autorizado", 401)
+
+    if request.method == "GET":
+        events = normalizar_eventos_staff(cargar_eventos_staff())
+        return jsonify({
+            "ok": True,
+            "status": "open",
+            "count": len(events),
+            "events": events,
+        })
+
+    payload = request.get_json(silent=True)
+    if payload is None:
+        return _json_error("JSON requerido")
+
+    incoming_events = _payload_a_eventos_staff(payload)
+    if not incoming_events:
+        return _json_error("No se recibieron eventos validos")
+
+    replace = bool(payload.get("replace"))
+    current_events = [] if replace else cargar_eventos_staff()
+    merged_events = _merge_eventos_staff(current_events, incoming_events)
+    guardar_eventos_staff(merged_events)
+
+    return jsonify({
+        "ok": True,
+        "status": "open",
+        "received": len(incoming_events),
+        "count": len(merged_events),
+    })
+
+
 @app.route("/api/horario")
 def api_horario():
     nombre = request.args.get("nombre")
@@ -1132,6 +1661,11 @@ def api_horario():
     if df_est.empty:
         return jsonify([])
 
+    maestro = get_student_info_by_names([nombre]).get(nombre, {})
+    codigo = _safe_text(maestro.get("ID")) or "--"
+    correo = _safe_text(maestro.get("CORREO"))
+    contacto = _safe_text(maestro.get("CONTACTO"))
+
     # Solo incluir filas con horas válidas para la visualización
     df_est_valid = df_est[df_est["_horas_validas"] == True]
 
@@ -1140,16 +1674,15 @@ def api_horario():
 
     res = []
     for _, row in df_est_valid.iterrows():
-        try:
-            codigo = str(int(row["Codigo_Clase"]))
-        except (ValueError, TypeError):
-            codigo = str(row["Codigo_Clase"]) if pd.notna(row["Codigo_Clase"]) else "--"
         res.append({
             "dia": row["Dia"],
             "inicio": row["Hora_Inicio"],
             "fin": row["Hora_Fin"],
             "materia": str(row["Materia"]),
+            "docente": str(row.get("Docente", "")) if pd.notna(row.get("Docente", "")) else "",
             "codigo": codigo,
+            "correo": correo,
+            "contacto": contacto,
             "color": color_map.get(row["Materia"], COLORES[0]),
         })
 
@@ -1157,7 +1690,8 @@ def api_horario():
 
 
 with app.app_context():
-    ensure_staff_tables()
+    ensure_students_db()
+    ensure_services_db()
 
 
 if __name__ == "__main__":

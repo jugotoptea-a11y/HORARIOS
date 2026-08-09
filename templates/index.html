@@ -360,6 +360,40 @@
       margin-bottom: 10px;
     }
 
+    .sort-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 0 0 10px;
+      padding: 10px;
+      border: 1px solid #ead4d4;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .sort-tools select,
+    .sort-tools input {
+      width: auto;
+      min-width: 160px;
+      margin: 0;
+      padding: 7px 9px;
+      font-size: 12px;
+      border-radius: 7px;
+    }
+
+    .sort-tools input {
+      flex: 1 1 260px;
+    }
+
+    .sort-tools .tool-btn {
+      width: auto;
+      margin: 0;
+      padding: 7px 10px;
+      font-size: 12px;
+      border-radius: 7px;
+    }
+
     .copy-tools .tool-btn {
       width: auto;
       margin: 0;
@@ -374,6 +408,42 @@
       width: 34px;
       text-align: center;
       padding-right: 8px;
+    }
+
+    .sort-header {
+      text-align: left;
+      padding: 4px 16px 4px 0;
+      font-size: 13px;
+      color: #555;
+      font-weight: 600;
+      border: 0;
+      border-bottom: 2px solid #eee;
+      background: transparent;
+      cursor: pointer;
+      width: 100%;
+      margin: 0;
+    }
+
+    .sort-header:hover {
+      transform: none;
+      box-shadow: none;
+      color: var(--cuc-auburn, #A3161A);
+    }
+
+    .sort-header::after {
+      content: " ↕";
+      color: #9b8a8a;
+      font-size: 11px;
+    }
+
+    .sort-header[data-direction="asc"]::after {
+      content: " ↑";
+      color: #A3161A;
+    }
+
+    .sort-header[data-direction="desc"]::after {
+      content: " ↓";
+      color: #A3161A;
     }
 
     /* ===== HORARIO TABLE ===== */
@@ -467,6 +537,14 @@
       font-weight: 400;
       opacity: 0.9;
       margin-top: 2px;
+    }
+
+    .clase-block .materia-docente {
+      font-size: 9.5px;
+      font-weight: 500;
+      opacity: 0.95;
+      margin-top: 2px;
+      line-height: 1.15;
     }
 
     .clase-block .codigo-clase {
@@ -969,6 +1047,12 @@
         width: 100%;
         min-width: 0;
       }
+
+      .sort-tools select,
+      .sort-tools input,
+      .sort-tools .tool-btn {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -1451,19 +1535,32 @@
         <button type="button" class="tool-btn" id="btn-copy-selected">Copiar seleccionados</button>
         <button type="button" class="tool-btn" id="btn-copy-all">Copiar todo</button>
       </div>
+      <div class="sort-tools">
+        <select id="sort-field" aria-label="Columna para ordenar">
+          <option value="name">Nombre</option>
+          <option value="doc">Documento</option>
+          <option value="promo">Promocion</option>
+          <option value="correo">Correo</option>
+          <option value="contacto">Contacto</option>
+        </select>
+        <select id="sort-direction" aria-label="Direccion del orden">
+          <option value="asc">Ascendente</option>
+          <option value="desc">Descendente</option>
+          <option value="custom">Orden personalizado</option>
+        </select>
+        <input type="text" id="custom-sort-order" placeholder="Orden personalizado: 2026, 2025, 2024, 2023">
+        <button type="button" class="tool-btn" id="btn-apply-sort">Ordenar</button>
+        <button type="button" class="tool-btn" id="btn-reset-sort">Orden original</button>
+      </div>
       <table class="result-table">
         <thead>
           <tr>
             <th class="check-col"><input type="checkbox" id="check-all-rows"></th>
-            <th
-              style="text-align:left; padding:4px 16px 4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">
-              Nombre</th>
-            <th
-              style="text-align:left; padding:4px 16px 4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">
-              Documento</th>
-            <th
-              style="text-align:left; padding:4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">
-              Promoción</th>
+            <th><button type="button" class="sort-header" data-sort-field="name">Nombre</button></th>
+            <th><button type="button" class="sort-header" data-sort-field="doc">Documento</button></th>
+            <th><button type="button" class="sort-header" data-sort-field="promo">Promocion</button></th>
+            <th><button type="button" class="sort-header" data-sort-field="correo">Correo</button></th>
+            <th><button type="button" class="sort-header" data-sort-field="contacto">Contacto</button></th>
             <th
               style="text-align:left; padding:4px 0; font-size:13px; color:#555; font-weight:600; border-bottom:2px solid #eee;">
               Acción</th>
@@ -1472,14 +1569,18 @@
         <tbody>
           {% for est in disponibles %}
           <tr class="result-row" data-name="{{est}}" data-doc="{{disponibles_info[est]}}"
-            data-promo="{{disponibles_promo.get(est, '')}}">
+            data-promo="{{disponibles_promo.get(est, '')}}" data-correo="{{disponibles_correo.get(est, '')}}"
+            data-contacto="{{disponibles_contacto.get(est, '')}}">
             <td class="check-col"><input type="checkbox" class="row-select"></td>
             <td class="est-nombre">{{est}}</td>
             <td class="est-doc">{{disponibles_info[est]}}</td>
             <td class="est-promo">{{disponibles_promo.get(est, '')}}</td>
+            <td class="est-correo">{{disponibles_correo.get(est, '')}}</td>
+            <td class="est-contacto">{{disponibles_contacto.get(est, '')}}</td>
             <td>
               <button type="button" class="copy-btn" data-name="{{est}}" data-doc="{{disponibles_info[est]}}"
-                data-promo="{{disponibles_promo.get(est, '')}}">Copiar</button>
+                data-promo="{{disponibles_promo.get(est, '')}}" data-correo="{{disponibles_correo.get(est, '')}}"
+                data-contacto="{{disponibles_contacto.get(est, '')}}">Copiar</button>
             </td>
           </tr>
           {% endfor %}
@@ -1600,9 +1701,11 @@
         block.style.top = topOffset + 'px';
         block.style.left = leftOffset + 'px';
         block.style.width = (dataColWidth - 4) + 'px';
-        block.title = clase.materia + '\n' + formatMin(startMin) + ' - ' + formatMin(endMin);
+        var docente = clase.docente || '';
+        block.title = clase.materia + (docente ? '\n' + docente : '') + '\n' + formatMin(startMin) + ' - ' + formatMin(endMin);
 
         block.innerHTML = '<div class="materia-name">' + clase.materia + '</div>'
+          + (docente ? '<div class="materia-docente">' + docente + '</div>' : '')
           + '<div class="materia-time">' + formatMin(startMin) + ' - ' + formatMin(endMin) + '</div>'
           + '<div class="codigo-clase">' + clase.codigo + '</div>';
 
@@ -1665,7 +1768,7 @@
       rows.forEach(function (row) {
         row.style.cursor = 'pointer';
         row.addEventListener('click', function (e) {
-          if (e.target && (e.target.closest('.copy-btn') || e.target.closest('.row-select') || e.target.closest('.check-col'))) return;
+          if (e.target && (e.target.closest('.copy-btn') || e.target.closest('.row-select') || e.target.closest('.check-col') || e.target.closest('.sort-header') || e.target.closest('.sort-tools'))) return;
           var nombreEl = this.querySelector('.est-nombre');
           if (!nombreEl) return;
           var nombre = nombreEl.textContent.trim();
@@ -1675,12 +1778,14 @@
     }
 
     function buildRowsText(rows) {
-      var lines = ['Nombre\tDocumento\tPromoción'];
+      var lines = ['Nombre\tDocumento\tPromoción\tCorreo\tContacto'];
       rows.forEach(function (row) {
         var name = row.getAttribute('data-name') || '';
         var doc = row.getAttribute('data-doc') || '';
         var promo = row.getAttribute('data-promo') || '';
-        lines.push(name + '\t' + doc + '\t' + promo);
+        var correo = row.getAttribute('data-correo') || '';
+        var contacto = row.getAttribute('data-contacto') || '';
+        lines.push(name + '\t' + doc + '\t' + promo + '\t' + correo + '\t' + contacto);
       });
       return lines.join('\n');
     }
@@ -1709,7 +1814,10 @@
           var name = btn.getAttribute('data-name') || '';
           var doc = btn.getAttribute('data-doc') || '';
           var promo = btn.getAttribute('data-promo') || '';
-          var payload = 'Nombre\tDocumento\tPromoción\n' + name + '\t' + doc + '\t' + promo;
+          var correo = btn.getAttribute('data-correo') || '';
+          var contacto = btn.getAttribute('data-contacto') || '';
+          var payload = 'Nombre\tDocumento\tPromoción\tCorreo\tContacto\n'
+            + name + '\t' + doc + '\t' + promo + '\t' + correo + '\t' + contacto;
           copyTextWithFeedback(payload, btn);
         });
       });
@@ -1750,7 +1858,8 @@
       });
 
       btnCopySelected.addEventListener('click', function () {
-        var selectedRows = rows.filter(function (row) {
+        var currentRows = Array.from(document.querySelectorAll('.result-row'));
+        var selectedRows = currentRows.filter(function (row) {
           var cb = row.querySelector('.row-select');
           return cb && cb.checked;
         });
@@ -1762,8 +1871,121 @@
       });
 
       btnCopyAll.addEventListener('click', function () {
-        copyTextWithFeedback(buildRowsText(rows), btnCopyAll);
+        var currentRows = Array.from(document.querySelectorAll('.result-row'));
+        copyTextWithFeedback(buildRowsText(currentRows), btnCopyAll);
       });
+    }
+
+    function attachSortHandlers() {
+      var table = document.querySelector('.result-table');
+      if (!table) return;
+      var tbody = table.querySelector('tbody');
+      var rows = Array.from(tbody.querySelectorAll('.result-row'));
+      var fieldSelect = document.getElementById('sort-field');
+      var directionSelect = document.getElementById('sort-direction');
+      var customInput = document.getElementById('custom-sort-order');
+      var btnApply = document.getElementById('btn-apply-sort');
+      var btnReset = document.getElementById('btn-reset-sort');
+      var headers = Array.from(document.querySelectorAll('.sort-header'));
+
+      rows.forEach(function (row, index) {
+        row.setAttribute('data-original-index', index);
+      });
+
+      function normalize(value) {
+        return String(value || '').trim().toLowerCase();
+      }
+
+      function valueFor(row, field) {
+        return row.getAttribute('data-' + field) || '';
+      }
+
+      function compareValues(a, b, field, direction) {
+        var av = valueFor(a, field);
+        var bv = valueFor(b, field);
+        var an = Number(av);
+        var bn = Number(bv);
+        var bothNumeric = av !== '' && bv !== '' && !Number.isNaN(an) && !Number.isNaN(bn);
+        var result = bothNumeric ? an - bn : av.localeCompare(bv, 'es', { sensitivity: 'base', numeric: true });
+        if (result === 0) {
+          result = Number(a.getAttribute('data-original-index')) - Number(b.getAttribute('data-original-index'));
+        }
+        return direction === 'desc' ? -result : result;
+      }
+
+      function customRankMap() {
+        var parts = (customInput.value || '').split(',').map(function (part) {
+          return normalize(part);
+        }).filter(Boolean);
+        var rank = {};
+        parts.forEach(function (part, index) {
+          rank[part] = index;
+        });
+        return rank;
+      }
+
+      function setHeaderState(field, direction) {
+        headers.forEach(function (header) {
+          header.removeAttribute('data-direction');
+          if (header.getAttribute('data-sort-field') === field && direction !== 'custom') {
+            header.setAttribute('data-direction', direction);
+          }
+        });
+      }
+
+      function renderRows(sortedRows) {
+        sortedRows.forEach(function (row) {
+          tbody.appendChild(row);
+        });
+      }
+
+      function applySort(field, direction) {
+        var sortedRows = Array.from(tbody.querySelectorAll('.result-row'));
+        if (direction === 'custom') {
+          var rank = customRankMap();
+          sortedRows.sort(function (a, b) {
+            var av = normalize(valueFor(a, field));
+            var bv = normalize(valueFor(b, field));
+            var ar = Object.prototype.hasOwnProperty.call(rank, av) ? rank[av] : Number.MAX_SAFE_INTEGER;
+            var br = Object.prototype.hasOwnProperty.call(rank, bv) ? rank[bv] : Number.MAX_SAFE_INTEGER;
+            if (ar !== br) return ar - br;
+            return compareValues(a, b, field, 'asc');
+          });
+        } else {
+          sortedRows.sort(function (a, b) {
+            return compareValues(a, b, field, direction);
+          });
+        }
+        renderRows(sortedRows);
+        setHeaderState(field, direction);
+      }
+
+      headers.forEach(function (header) {
+        header.addEventListener('click', function () {
+          var field = header.getAttribute('data-sort-field');
+          var nextDirection = header.getAttribute('data-direction') === 'asc' ? 'desc' : 'asc';
+          fieldSelect.value = field;
+          directionSelect.value = nextDirection;
+          applySort(field, nextDirection);
+        });
+      });
+
+      if (btnApply) {
+        btnApply.addEventListener('click', function () {
+          applySort(fieldSelect.value, directionSelect.value);
+        });
+      }
+
+      if (btnReset) {
+        btnReset.addEventListener('click', function () {
+          var originalRows = Array.from(tbody.querySelectorAll('.result-row')).sort(function (a, b) {
+            return Number(a.getAttribute('data-original-index')) - Number(b.getAttribute('data-original-index'));
+          });
+          renderRows(originalRows);
+          setHeaderState('', '');
+          directionSelect.value = 'asc';
+        });
+      }
     }
 
     function fallbackCopy(texto, btn) {
@@ -1880,9 +2102,11 @@
         block.style.top = topOffset + 'px';
         block.style.left = leftOffset + 'px';
         block.style.width = (dataColWidth - 4) + 'px';
-        block.title = clase.materia + '\n' + formatMin(startMin) + ' - ' + formatMin(endMin);
+        var docente = clase.docente || '';
+        block.title = clase.materia + (docente ? '\n' + docente : '') + '\n' + formatMin(startMin) + ' - ' + formatMin(endMin);
 
         block.innerHTML = '<div class="materia-name">' + clase.materia + '</div>'
+          + (docente ? '<div class="materia-docente">' + docente + '</div>' : '')
           + '<div class="materia-time">' + formatMin(startMin) + ' - ' + formatMin(endMin) + '</div>'
           + '<div class="codigo-clase">' + clase.codigo + '</div>';
 
@@ -1933,6 +2157,7 @@
       attachResultClickHandlers();
       attachCopyHandlers();
       attachBulkCopyHandlers();
+      attachSortHandlers();
     });
   </script>
 

@@ -69,13 +69,14 @@
       background: #fafcff;
     }
     label { display: block; margin-top: 10px; margin-bottom: 5px; font-weight: 600; color: #2f3b50; font-size: 13px; }
-    input[type="text"], input[type="date"], input[type="time"], select {
+    input[type="text"], input[type="date"], input[type="time"], select, textarea {
       width: 100%;
       border: 1px solid #cdd7e5;
       border-radius: 6px;
       padding: 8px;
       font-size: 13px;
       background: #fff;
+      font-family: inherit;
     }
     button {
       width: 100%;
@@ -215,6 +216,12 @@
     .inline-form input[type="time"] {
       margin: 0;
     }
+    .event-comments {
+      flex-basis: 100%;
+      min-height: 72px;
+      resize: vertical;
+      margin: 0;
+    }
     .actions-row {
       display: flex;
       gap: 8px;
@@ -352,7 +359,8 @@
     input[type="text"],
     input[type="date"],
     input[type="time"],
-    select {
+    select,
+    textarea {
       border-radius: 10px;
       border-color: rgba(89, 89, 89, 0.28);
       font-family: inherit;
@@ -361,7 +369,8 @@
     input[type="text"]:focus,
     input[type="date"]:focus,
     input[type="time"]:focus,
-    select:focus {
+    select:focus,
+    textarea:focus {
       outline: 2px solid rgba(163, 22, 26, 0.2);
       border-color: var(--cuc-auburn);
     }
@@ -749,6 +758,7 @@
                 <input type="time" name="hora_inicio" value="{{ block.evento.hora_inicio }}">
                 <input type="time" name="hora_fin" value="{{ block.evento.hora_fin }}">
                 <input type="text" name="promociones_texto" value="{{ block.promociones_texto }}" placeholder="Promociones (coma)">
+                <textarea class="event-comments" name="comentarios" placeholder="Comentarios del evento">{{ block.evento.comentarios }}</textarea>
                 <button type="submit" class="soft-btn">Guardar cambios</button>
               </form>
 
