@@ -124,18 +124,11 @@ def _formatear_nombre_becado(nombre):
     if not raw:
         return ""
     tokens = raw.split()
-    if len(tokens) < 3:
-        return " ".join(_titulo_nombre(t) for t in tokens) if raw.upper() == raw else raw
-    if raw.upper() != raw:
-        return raw
-
-    apellido_1, idx = _tomar_apellido(tokens, 0)
-    apellido_2, idx = _tomar_apellido(tokens, idx)
-    nombres = tokens[idx:]
-    if not nombres:
+    # Mantener el orden original tal como aparece en el PDF,
+    # solo aplicar capitalización correcta si el texto está en mayúsculas.
+    if raw.upper() == raw:
         return " ".join(_titulo_nombre(t) for t in tokens)
-    ordenado = nombres + apellido_1 + apellido_2
-    return " ".join(_titulo_nombre(t) for t in ordenado)
+    return raw
 
 
 def convertir_24(hora):
